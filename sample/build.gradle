@@ -1,0 +1,63 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 28
+
+    defaultConfig {
+        applicationId "com.iptv.playersample"
+        minSdkVersion 19
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = '1.8'
+        targetCompatibility = '1.8'
+    }
+
+    splits {
+        abi {
+            enable true
+            reset()
+            include 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+            universalApk false
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'androidx.appcompat:appcompat:1.0.0'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+
+    implementation project(':player')
+}
+
+// Map for the version code that gives each ABI a value.
+ext.abiCodes = [
+        'armeabi-v7a': 1,
+        'arm64-v8a'  : 2,
+        'x86'        : 3,
+        'x86_64'     : 4
+]
+
+import com.android.build.OutputFile
+
+android.applicationVariants.all { variant ->
+    variant.outputs.each { output ->
+        def baseAbiVersionCode = project.ext.abiCodes.get(output.getFilter(OutputFile.ABI))
+
+        if (baseAbiVersionCode != null) {
+            output.versionCodeOverride = baseAbiVersionCode * 10000000 + variant.versionCode
+        }
+    }
+}

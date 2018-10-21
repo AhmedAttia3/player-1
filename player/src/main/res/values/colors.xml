@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="network_unknown_color">#94FFFFFF</color>
+    <color name="network_poor_color">#D50000</color>
+    <color name="network_moderate_color">#F44336</color>
+    <color name="network_good_color">#4CAF50</color>
+    <color name="network_excellent_color">#388E3C</color>
+</resources>

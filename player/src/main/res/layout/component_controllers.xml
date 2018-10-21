@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/component_controllers"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#c8000000"
+    android:padding="8dp"
+    android:visibility="gone"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent">
+
+    <TextView
+        android:id="@+id/current_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="00:00"
+        android:layout_marginStart="16dp"
+        android:textColor="@android:color/white"
+        app:layout_constraintBottom_toBottomOf="@id/seek_bar"
+        app:layout_constraintTop_toTopOf="@id/seek_bar"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <SeekBar
+        android:id="@+id/seek_bar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/media_time"
+        app:layout_constraintStart_toEndOf="@id/current_time" />
+
+    <TextView
+        android:id="@+id/media_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="00:00"
+        android:layout_marginEnd="16dp"
+        android:textColor="@android:color/white"
+        app:layout_constraintBottom_toBottomOf="@id/seek_bar"
+        app:layout_constraintTop_toTopOf="@id/seek_bar"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/seek_bar_barrier"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="top"
+        app:constraint_referenced_ids="current_time, seek_bar, media_time" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/minus_10"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minWidth="0dp"
+        android:nextFocusRight="@id/play_pause"
+        app:cornerRadius="4dp"
+        app:icon="@drawable/ic_fast_rewind_white"
+        app:iconPadding="0dp"
+        app:iconTint="@android:color/white"
+        app:layout_constraintBottom_toTopOf="@id/seek_bar_barrier"
+        app:layout_constraintEnd_toStartOf="@id/play_pause"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toStartOf="parent"
+        app:strokeColor="@android:color/transparent" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/play_pause"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minWidth="0dp"
+        android:nextFocusLeft="@id/minus_10"
+        android:nextFocusRight="@id/plus_10"
+        app:cornerRadius="4dp"
+        app:icon="@drawable/ic_play_arrow_white"
+        app:iconPadding="0dp"
+        app:iconTint="@android:color/white"
+        app:layout_constraintBottom_toTopOf="@id/seek_bar_barrier"
+        app:layout_constraintEnd_toStartOf="@id/plus_10"
+        app:layout_constraintStart_toEndOf="@id/minus_10"
+        app:strokeColor="@android:color/transparent" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/plus_10"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minWidth="0dp"
+        android:nextFocusLeft="@id/play_pause"
+        app:cornerRadius="4dp"
+        app:icon="@drawable/ic_fast_forward_white"
+        app:iconPadding="0dp"
+        app:iconTint="@android:color/white"
+        app:layout_constraintBottom_toTopOf="@id/seek_bar_barrier"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/play_pause"
+        app:strokeColor="@android:color/transparent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

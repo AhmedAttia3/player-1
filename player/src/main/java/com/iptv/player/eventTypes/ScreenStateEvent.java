@@ -1,0 +1,18 @@
+package com.iptv.player.eventTypes;
+
+public enum ScreenStateEvent {
+    OPENING,
+    BUFFERING,
+    PLAYING,
+    PAUSES,
+    STOPPED,
+    LENGTH_CHANGED,
+    TIME_CHANGED,
+    END_REACHED,
+    POSITION_CHANGED,
+    SEEKABLE_CHANGED,
+    PAUSABLE_CHANGED,
+    CONNECTION_QUALITY_CHANGED,
+    ON_SCREEN_TOUCH,
+    ON_KEY_DOWN
+}
