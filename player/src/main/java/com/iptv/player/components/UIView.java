@@ -1,11 +1,11 @@
-package com.iptv.player.interfaces;
+package com.iptv.player.components;
 
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.iptv.player.eventTypes.UserInteraction;
+import com.iptv.player.eventTypes.UserInteractionEvent;
 
 import androidx.annotation.IdRes;
 import androidx.annotation.LayoutRes;
@@ -18,22 +18,22 @@ import static android.view.View.NO_ID;
 
 public abstract class UIView {
 
+    private @LayoutRes int layoutResource;
     public View view;
     private boolean showing;
     protected MutableLiveData<UserInteraction> userInteractionEvents = new MutableLiveData<>();
 
-    public UIView(@NonNull ViewGroup parent) {
-        this(parent, 0, false);
+    public UIView(@LayoutRes int layoutResource, boolean isShowing) {
+        this.layoutResource = layoutResource;
+        this.showing = isShowing;
     }
 
-    public UIView(@NonNull ViewGroup parent, @LayoutRes int layoutResource, boolean isShowing) {
+    public void setParent(@NonNull ViewGroup parent) {
         if (layoutResource != 0) {
             view = LayoutInflater.from(parent.getContext())
                 .inflate(layoutResource, parent, false);
             parent.addView(view);
         }
-
-        this.showing = isShowing;
     }
 
     @Nullable
@@ -46,6 +46,14 @@ public abstract class UIView {
 
     public LiveData<UserInteraction> getUserInteractionEvents() {
         return userInteractionEvents;
+    }
+
+    protected void requestOnKeyLock(String lockTag) {
+        userInteractionEvents.setValue(new UserInteraction(lockTag, UserInteractionEvent.ON_KEY_LOCK));
+    }
+
+    protected void clearOnKeyLock(String lockTag) {
+        userInteractionEvents.setValue(new UserInteraction(lockTag, UserInteractionEvent.CLEAR_ON_KEY_LOCK));
     }
 
     public void show() {
@@ -67,4 +75,6 @@ public abstract class UIView {
     public boolean isShowing() {
         return showing;
     }
+
+    public abstract String getLockTag();
 }

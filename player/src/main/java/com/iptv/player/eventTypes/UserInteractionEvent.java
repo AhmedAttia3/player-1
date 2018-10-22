@@ -9,5 +9,8 @@ public enum UserInteractionEvent {
     PREVIOUS,
     TIME_CHANGED,
     TIME_MINUS,
-    TIME_PLUS
+    TIME_PLUS,
+    ON_KEY_DOWN,
+    ON_KEY_LOCK,
+    CLEAR_ON_KEY_LOCK
 }

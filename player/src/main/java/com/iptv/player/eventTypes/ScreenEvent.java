@@ -1,7 +1,5 @@
 package com.iptv.player.eventTypes;
 
-import android.view.KeyEvent;
-
 import com.facebook.network.connectionclass.ConnectionQuality;
 
 public class ScreenEvent {
@@ -10,7 +8,6 @@ public class ScreenEvent {
     private long lengthChanged;
     private float buffering;
     private ConnectionQuality connectionQuality;
-    private KeyEvent keyEvent;
     private ScreenStateEvent event;
 
     public ScreenEvent(ScreenStateEvent event) {
@@ -39,11 +36,6 @@ public class ScreenEvent {
         this.connectionQuality = connectionQuality;
     }
 
-    public ScreenEvent(KeyEvent keyEvent) {
-        this.event = ScreenStateEvent.ON_KEY_DOWN;
-        this.keyEvent = keyEvent;
-    }
-
     public ScreenStateEvent getEvent() {
         return event;
     }
@@ -62,9 +54,5 @@ public class ScreenEvent {
 
     public ConnectionQuality getConnectionQuality() {
         return connectionQuality;
-    }
-
-    public KeyEvent getKeyEvent() {
-        return keyEvent;
     }
 }

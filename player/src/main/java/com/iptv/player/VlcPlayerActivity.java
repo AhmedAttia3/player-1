@@ -18,6 +18,7 @@ import android.widget.FrameLayout;
 import com.facebook.network.connectionclass.ConnectionClassManager;
 import com.facebook.network.connectionclass.ConnectionQuality;
 import com.facebook.network.connectionclass.DeviceBandwidthSampler;
+import com.iptv.player.components.Component;
 import com.iptv.player.eventTypes.ScreenEvent;
 import com.iptv.player.eventTypes.ScreenStateEvent;
 import com.iptv.player.eventTypes.UserInteraction;
@@ -28,6 +29,8 @@ import org.videolan.libvlc.Media;
 import org.videolan.libvlc.MediaPlayer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -36,7 +39,8 @@ import androidx.lifecycle.ViewModelProviders;
 
 public abstract class VlcPlayerActivity extends AppCompatActivity implements
     IVLCVout.OnNewVideoLayoutListener,
-    MediaPlayer.EventListener, ConnectionClassManager.ConnectionClassStateChangeListener {
+    MediaPlayer.EventListener,
+    ConnectionClassManager.ConnectionClassStateChangeListener {
 
     private static final String TAG = "VlcPlayerActivity";
 
@@ -67,17 +71,20 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
     private DeviceBandwidthSampler mDeviceBandwidthSampler;
     private ConnectionClassManager mConnectionClassManager;
 
+    private ConstraintLayout componentContainer;
+    List<Component> components;
+    private boolean isOnKeyDownConsumed = true;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_vlc_player);
         viewModel = ViewModelProviders.of(this).get(VlcPlayerViewModel.class);
 
-        ConstraintLayout viewContainer = findViewById(R.id.view_container);
-        viewContainer.setOnClickListener(
+        componentContainer = findViewById(R.id.view_container);
+        componentContainer.setOnClickListener(
             v -> viewModel.setScreenStateEvent(new ScreenEvent(ScreenStateEvent.ON_SCREEN_TOUCH)));
-        initComponents(viewContainer, viewModel.getScreenStateEvent());
-        initUserInteractionEvents();
+
         viewModel.getUserInteractionEvents().observe(this, this::onUserInteraction);
 
         final ArrayList<String> args = new ArrayList<>();
@@ -100,8 +107,14 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
         mDeviceBandwidthSampler.startSampling();
     }
 
-    public abstract void initComponents(ViewGroup parent, LiveData<ScreenEvent> screenStateEvent);
-    public abstract void initUserInteractionEvents();
+//    public abstract void initComponents(ViewGroup parent, LiveData<ScreenEvent> screenStateEvent);
+//    public abstract void initUserInteractionEvents();
+
+    public abstract List<Component> getComponents();
+
+//    public void addComponent(Component... componentsArgs) {
+//        components.addAll(Arrays.asList(componentsArgs));
+//    }
 
     public void setMedia(String url) {
         final Media media = new Media(mLibVLC, Uri.parse(url));
@@ -156,6 +169,16 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
     @Override
     protected void onStart() {
         super.onStart();
+
+        components = getComponents();
+        if (components != null) {
+            for (Component component : components) {
+                component.getView().setParent(componentContainer);
+                component.getPresenter().setUiView(component.getView());
+                component.getPresenter().setScreenStateEvent(viewModel.getScreenStateEvent());
+                viewModel.addUserInteractionSource(component.getView().getUserInteractionEvents());
+            }
+        }
 
         if (mOnLayoutChangeListener == null) {
             mOnLayoutChangeListener = new View.OnLayoutChangeListener() {
@@ -457,7 +480,24 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
                 plus(userInteraction.getSeekValue());
                 viewModel.setScreenStateEvent(new ScreenEvent(getTime(), ScreenStateEvent.TIME_CHANGED));
                 break;
+            case ON_KEY_LOCK:
+                viewModel.requestOnKeyLocked(userInteraction.getLockTag());
+                break;
+            case CLEAR_ON_KEY_LOCK:
+                viewModel.clearOnKeyLock(userInteraction.getLockTag());
+                break;
         }
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        for (Component component : components) {
+            if (component.getPresenter().onKeyDown(keyCode, event, viewModel.getLockTag())) {
+                return true;
+            }
+        }
+
+        return super.onKeyDown(keyCode, event);
     }
 
     @Override

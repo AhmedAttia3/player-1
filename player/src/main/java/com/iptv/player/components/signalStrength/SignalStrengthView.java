@@ -6,19 +6,26 @@ import android.view.ViewGroup;
 import com.facebook.network.connectionclass.ConnectionQuality;
 import com.google.android.material.chip.Chip;
 import com.iptv.player.R;
-import com.iptv.player.interfaces.UIView;
+import com.iptv.player.components.UIView;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
 public class SignalStrengthView extends UIView {
 
+    private static final String LOCK_TAG = "signalStrengthComponent";
+
     private final Handler handler = new Handler();
     private final Runnable hideRunnable = this::hide;
     private Chip connectionChip;
 
-    public SignalStrengthView(@NonNull ViewGroup parent) {
-        super(parent, R.layout.component_signal_strength, false);
+    public SignalStrengthView() {
+        super(R.layout.component_signal_strength, false);
+    }
+
+    @Override
+    public void setParent(@NonNull ViewGroup parent) {
+        super.setParent(parent);
         connectionChip = findViewById(R.id.connection_chip);
     }
 
@@ -27,6 +34,11 @@ public class SignalStrengthView extends UIView {
         super.show();
         handler.removeCallbacks(hideRunnable);
         handler.postDelayed(hideRunnable, 5000);
+    }
+
+    @Override
+    public String getLockTag() {
+        return LOCK_TAG;
     }
 
     public void updateView(ConnectionQuality quality) {

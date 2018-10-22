@@ -2,10 +2,11 @@ package com.iptv.player.eventTypes;
 
 public class UserInteraction {
 
+    private UserInteractionEvent event;
     private int timeChanged;
     private int seekValue;
-    private UserInteractionEvent event;
     private String mediaUri;
+    private String lockTag;
 
     public UserInteraction(UserInteractionEvent event) {
         this.event = event;
@@ -24,9 +25,21 @@ public class UserInteraction {
         }
     }
 
-    public UserInteraction(String mediaUri) {
-        this.event = UserInteractionEvent.PLAY_MEDIA;
-        this.mediaUri = mediaUri;
+    public UserInteraction(String value, UserInteractionEvent event) {
+        this.event = event;
+        switch (event) {
+            case PLAY_MEDIA:
+                this.mediaUri = value;
+                break;
+            case ON_KEY_LOCK:
+            case CLEAR_ON_KEY_LOCK:
+                this.lockTag = value;
+                break;
+        }
+    }
+
+    public UserInteractionEvent getEvent() {
+        return event;
     }
 
     public int getTimeChanged() {
@@ -41,7 +54,7 @@ public class UserInteraction {
         return mediaUri;
     }
 
-    public UserInteractionEvent getEvent() {
-        return event;
+    public String getLockTag() {
+        return lockTag;
     }
 }

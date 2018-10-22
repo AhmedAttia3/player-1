@@ -1,10 +1,8 @@
 package com.iptv.player.components.controllers;
 
 import android.os.Handler;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -12,12 +10,16 @@ import com.google.android.material.button.MaterialButton;
 import com.iptv.player.R;
 import com.iptv.player.eventTypes.UserInteraction;
 import com.iptv.player.eventTypes.UserInteractionEvent;
-import com.iptv.player.interfaces.UIView;
+import com.iptv.player.components.UIView;
 
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.NonNull;
+
 public class ControllersView extends UIView implements View.OnClickListener {
+
+    public static final String LOCK_TAG = "controllersComponent";
 
     private MaterialButton minus10;
     private MaterialButton plus10;
@@ -31,8 +33,13 @@ public class ControllersView extends UIView implements View.OnClickListener {
     private final Handler handler = new Handler();
     private final Runnable hideRunnable = this::hide;
 
-    public ControllersView(ViewGroup parent) {
-        super(parent, R.layout.component_controllers, false);
+    public ControllersView() {
+        super(R.layout.component_controllers, false);
+    }
+
+    @Override
+    public void setParent(@NonNull ViewGroup parent) {
+        super.setParent(parent);
 
         minus10 = view.findViewById(R.id.minus_10);
         minus10.setOnClickListener(this);
@@ -64,11 +71,11 @@ public class ControllersView extends UIView implements View.OnClickListener {
 
             }
         });
-
     }
 
     @Override
     public void show() {
+        requestOnKeyLock(LOCK_TAG);
         if (!isShowing()) {
             playPause.requestFocus();
         }
@@ -80,6 +87,12 @@ public class ControllersView extends UIView implements View.OnClickListener {
     public void hide() {
         super.hide();
         stopAutoHide();
+        clearOnKeyLock(LOCK_TAG);
+    }
+
+    @Override
+    public String getLockTag() {
+        return LOCK_TAG;
     }
 
     public void startAutoHide() {

@@ -3,7 +3,7 @@ package com.iptv.player.components.signalStrength;
 import android.view.KeyEvent;
 
 import com.iptv.player.eventTypes.ScreenEvent;
-import com.iptv.player.interfaces.Presenter;
+import com.iptv.player.components.Presenter;
 
 public class SignalStrengthPresenter extends Presenter<SignalStrengthView> {
 
@@ -17,7 +17,7 @@ public class SignalStrengthPresenter extends Presenter<SignalStrengthView> {
     }
 
     @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
+    public boolean onKeyDown(int keyCode, KeyEvent keyEvent, String lockTag) {
         return false;
     }
 }

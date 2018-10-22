@@ -1,15 +1,18 @@
 package com.iptv.player.components.loading;
 
-import android.view.ViewGroup;
-
 import com.iptv.player.R;
-import com.iptv.player.interfaces.UIView;
-
-import androidx.annotation.NonNull;
+import com.iptv.player.components.UIView;
 
 public class LoadingView extends UIView {
 
-    public LoadingView(@NonNull ViewGroup parent) {
-        super(parent, R.layout.component_loading, false);
+    private static final String LOCK_TAG = "loadingComponent";
+
+    public LoadingView() {
+        super(R.layout.component_loading, false);
+    }
+
+    @Override
+    public String getLockTag() {
+        return LOCK_TAG;
     }
 }

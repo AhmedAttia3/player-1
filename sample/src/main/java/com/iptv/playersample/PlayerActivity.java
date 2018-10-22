@@ -7,6 +7,7 @@ import android.view.KeyEvent;
 import android.view.ViewGroup;
 
 import com.iptv.player.VlcPlayerActivity;
+import com.iptv.player.components.Component;
 import com.iptv.player.components.controllers.ControllersPresenter;
 import com.iptv.player.components.controllers.ControllersView;
 import com.iptv.player.components.loading.LoadingPresenter;
@@ -14,6 +15,9 @@ import com.iptv.player.components.loading.LoadingView;
 import com.iptv.player.components.signalStrength.SignalStrengthPresenter;
 import com.iptv.player.components.signalStrength.SignalStrengthView;
 import com.iptv.player.eventTypes.ScreenEvent;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProviders;
@@ -27,43 +31,36 @@ public class PlayerActivity extends VlcPlayerActivity {
         context.startActivity(starter);
     }
 
-    ControllersView controllersView;
-    ControllersPresenter controllersPresenter;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-//        setAndPlay("http://magictv.live:25461/live/miko/hami111/450.ts");
         setAndPlay(SAMPLE_URL);
     }
 
     @Override
-    public void initComponents(ViewGroup parent, LiveData<ScreenEvent> screenStateEvent) {
+    public List<Component> getComponents() {
 
-        controllersView = new ControllersView(parent);
-        controllersPresenter = ViewModelProviders.of(this).get(ControllersPresenter.class);
-        controllersPresenter.init(controllersView, screenStateEvent);
+        List<Component> components = new ArrayList<>();
 
-        LoadingView loadingView = new LoadingView(parent);
-        ViewModelProviders.of(this).get(LoadingPresenter.class)
-            .init(loadingView, screenStateEvent);
+        Component<ControllersView> controllersViewComponent = new Component<>(
+            new ControllersView(),
+            ViewModelProviders.of(this).get(ControllersPresenter.class)
+        );
 
-        SignalStrengthView signalStrengthView = new SignalStrengthView(parent);
-        ViewModelProviders.of(this).get(SignalStrengthPresenter.class)
-            .init(signalStrengthView, screenStateEvent);
-    }
+        Component<LoadingView> loadingViewComponent = new Component<>(
+            new LoadingView(),
+            ViewModelProviders.of(this).get(LoadingPresenter.class)
+        );
 
-    @Override
-    public void initUserInteractionEvents() {
-        viewModel.addUserInteractionSource(controllersView.getUserInteractionEvents());
-    }
+        Component<SignalStrengthView> signalStrengthViewComponent = new Component<>(
+            new SignalStrengthView(),
+            ViewModelProviders.of(this).get(SignalStrengthPresenter.class)
+        );
 
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (controllersPresenter.onKeyDown(keyCode, event)) {
-            return true;
-        }
-        return super.onKeyDown(keyCode, event);
+        components.add(controllersViewComponent);
+        components.add(loadingViewComponent);
+        components.add(signalStrengthViewComponent);
+
+        return components;
     }
 }

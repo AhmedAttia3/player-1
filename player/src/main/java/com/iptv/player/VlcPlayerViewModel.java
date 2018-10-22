@@ -11,11 +11,17 @@ import androidx.lifecycle.ViewModel;
 
 public class VlcPlayerViewModel extends ViewModel {
 
+    private boolean onKeyLocked = false;
+    private String lockTag = null;
+
     private MutableLiveData<ScreenEvent> screenStateEventLiveData = new MutableLiveData<>();
     private MediatorLiveData<UserInteraction> userInteractionEvents = new MediatorLiveData<>();
 
     LiveData<ScreenEvent> getScreenStateEvent() {
         return screenStateEventLiveData;
+    }
+    MediatorLiveData<UserInteraction> getUserInteractionEvents() {
+        return userInteractionEvents;
     }
 
     @MainThread
@@ -27,12 +33,28 @@ public class VlcPlayerViewModel extends ViewModel {
         screenStateEventLiveData.postValue(screenEvent);
     }
 
-    public void addUserInteractionSource(LiveData<UserInteraction> userInteractionLiveData) {
+    void addUserInteractionSource(LiveData<UserInteraction> userInteractionLiveData) {
         userInteractionEvents.addSource(userInteractionLiveData,
             userInteraction -> userInteractionEvents.setValue(userInteraction));
     }
 
-    MediatorLiveData<UserInteraction> getUserInteractionEvents() {
-        return userInteractionEvents;
+    public boolean isOnKeyLocked() {
+        return onKeyLocked;
+    }
+
+    public String getLockTag() {
+        return lockTag;
+    }
+
+    public void requestOnKeyLocked(String lockTag) {
+        this.onKeyLocked = true;
+        this.lockTag = lockTag;
+    }
+
+    public void clearOnKeyLock(String lockTag) {
+        if (this.lockTag != null && this.lockTag.equals(lockTag)) {
+            this.onKeyLocked = false;
+            this.lockTag = null;
+        }
     }
 }

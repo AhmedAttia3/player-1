@@ -3,11 +3,11 @@ package com.iptv.player.components.controllers;
 import android.view.KeyEvent;
 
 import com.iptv.player.eventTypes.ScreenEvent;
-import com.iptv.player.interfaces.Presenter;
+import com.iptv.player.components.Presenter;
 
 public class ControllersPresenter extends Presenter<ControllersView> {
 
-    private boolean isPlaying;
+    private boolean isPlaying = false;
 
     @Override
     public void onScreenEvent(ScreenEvent screenEvent) {
@@ -41,27 +41,29 @@ public class ControllersPresenter extends Presenter<ControllersView> {
     }
 
     @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        switch (keyCode) {
-            case KeyEvent.KEYCODE_DPAD_UP:
-            case KeyEvent.KEYCODE_DPAD_DOWN:
-            case KeyEvent.KEYCODE_DPAD_RIGHT:
-            case KeyEvent.KEYCODE_DPAD_LEFT:
-                if (isPlaying) {
-                    if (!uiView.isShowing()) {
-                        uiView.show();
-                        return true;
-                    } else {
-                        uiView.startAutoHide();
+    public boolean onKeyDown(int keyCode, KeyEvent keyEvent, String lockTag) {
+        if (lockTag == null || lockTag.equals(uiView.getLockTag())) {
+            switch (keyCode) {
+                case KeyEvent.KEYCODE_DPAD_UP:
+                case KeyEvent.KEYCODE_DPAD_DOWN:
+                case KeyEvent.KEYCODE_DPAD_RIGHT:
+                case KeyEvent.KEYCODE_DPAD_LEFT:
+                    if (isPlaying) {
+                        if (!uiView.isShowing()) {
+                            uiView.show();
+                            return true;
+                        } else {
+                            uiView.startAutoHide();
+                        }
                     }
-                }
-                break;
-            case KeyEvent.KEYCODE_BACK:
-                if (uiView.isShowing()) {
-                    uiView.hide();
-                    return true;
-                }
-                break;
+                    break;
+                case KeyEvent.KEYCODE_BACK:
+                    if (uiView.isShowing()) {
+                        uiView.hide();
+                        return true;
+                    }
+                    break;
+            }
         }
         return false;
     }
