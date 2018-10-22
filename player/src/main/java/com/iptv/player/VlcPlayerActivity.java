@@ -401,6 +401,12 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
     @Override
     public void onEvent(MediaPlayer.Event event) {
         switch (event.type) {
+            case MediaPlayer.Event.MediaChanged:
+                viewModel.setScreenStateEvent(new ScreenEvent(ScreenStateEvent.MEDIA_CHANGED));
+                break;
+            case MediaPlayer.Event.Opening:
+                viewModel.setScreenStateEvent(new ScreenEvent(ScreenStateEvent.OPENING));
+                break;
             case MediaPlayer.Event.Buffering:
                 viewModel.setScreenStateEvent(new ScreenEvent(event.getBuffering()));
                 break;
@@ -424,6 +430,9 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
 
     private void onUserInteraction(UserInteraction userInteraction) {
         switch (userInteraction.getEvent()) {
+            case PLAY_MEDIA:
+                setAndPlay(userInteraction.getMediaUri());
+                break;
             case PLAY:
                 play();
                 break;

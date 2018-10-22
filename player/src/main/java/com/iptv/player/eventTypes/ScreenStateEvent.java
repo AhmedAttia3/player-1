@@ -1,6 +1,7 @@
 package com.iptv.player.eventTypes;
 
 public enum ScreenStateEvent {
+    MEDIA_CHANGED,
     OPENING,
     BUFFERING,
     PLAYING,

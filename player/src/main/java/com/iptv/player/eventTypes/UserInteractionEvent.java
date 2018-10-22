@@ -1,6 +1,7 @@
 package com.iptv.player.eventTypes;
 
 public enum UserInteractionEvent {
+    PLAY_MEDIA,
     PLAY,
     PAUSE,
     STOP,

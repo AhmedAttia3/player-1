@@ -5,6 +5,7 @@ public class UserInteraction {
     private int timeChanged;
     private int seekValue;
     private UserInteractionEvent event;
+    private String mediaUri;
 
     public UserInteraction(UserInteractionEvent event) {
         this.event = event;
@@ -23,12 +24,21 @@ public class UserInteraction {
         }
     }
 
+    public UserInteraction(String mediaUri) {
+        this.event = UserInteractionEvent.PLAY_MEDIA;
+        this.mediaUri = mediaUri;
+    }
+
     public int getTimeChanged() {
         return timeChanged;
     }
 
     public int getSeekValue() {
         return seekValue;
+    }
+
+    public String getMediaUri() {
+        return mediaUri;
     }
 
     public UserInteractionEvent getEvent() {

@@ -49,6 +49,7 @@ public class ControllersView extends UIView implements View.OnClickListener {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (fromUser) {
+                    startAutoHide();
                     userInteractionEvents.setValue(new UserInteraction(progress, UserInteractionEvent.TIME_CHANGED));
                 }
             }
@@ -92,6 +93,7 @@ public class ControllersView extends UIView implements View.OnClickListener {
 
     @Override
     public void onClick(View v) {
+        startAutoHide();
         if (v.getId() == R.id.minus_10) {
             userInteractionEvents.setValue(new UserInteraction(10000, UserInteractionEvent.TIME_MINUS));
         } else if (v.getId() == R.id.plus_10) {

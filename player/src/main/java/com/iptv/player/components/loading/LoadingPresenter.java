@@ -10,11 +10,12 @@ public class LoadingPresenter extends Presenter<LoadingView> {
     @Override
     public void onScreenEvent(ScreenEvent screenEvent) {
         switch (screenEvent.getEvent()) {
+            case OPENING:
+                uiView.show();
+                break;
             case BUFFERING:
                 if (screenEvent.getBuffering() > 99) {
                     uiView.hide();
-                } else {
-                    uiView.show();
                 }
                 break;
         }
