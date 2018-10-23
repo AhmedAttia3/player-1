@@ -31,12 +31,10 @@ import org.videolan.libvlc.Media;
 import org.videolan.libvlc.MediaPlayer;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProviders;
 
 public abstract class VlcPlayerActivity extends AppCompatActivity implements
@@ -48,13 +46,7 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
     private static final boolean USE_SURFACE_VIEW = true;
     private static final boolean ENABLE_SUBTITLES = true;
 
-    private static final int SURFACE_BEST_FIT = 0;
-    private static final int SURFACE_FIT_SCREEN = 1;
-    private static final int SURFACE_FILL = 2;
-    private static final int SURFACE_16_9 = 3;
-    private static final int SURFACE_4_3 = 4;
-    private static final int SURFACE_ORIGINAL = 5;
-    private static int CURRENT_SIZE = SURFACE_FIT_SCREEN;
+    private static SurfaceSize CURRENT_SIZE = SurfaceSize.SURFACE_FIT_SCREEN;
 
     private FrameLayout mVideoSurfaceFrame = null;
     private SurfaceView mVideoSurface = null;
@@ -118,6 +110,8 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
             mVideoView = mVideoTexture;
         }
 
+        mMediaPlayer.setEventListener(this);
+
         mDeviceBandwidthSampler = DeviceBandwidthSampler.getInstance();
         mConnectionClassManager = ConnectionClassManager.getInstance();
         mDeviceBandwidthSampler.startSampling();
@@ -135,16 +129,6 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
     protected void onStart() {
         super.onStart();
 
-        final IVLCVout vlcVout = mMediaPlayer.getVLCVout();
-        if (mVideoSurface != null) {
-            vlcVout.setVideoView(mVideoSurface);
-            if (mSubtitlesSurface != null)
-                vlcVout.setSubtitlesView(mSubtitlesSurface);
-        }
-        else
-            vlcVout.setVideoView(mVideoTexture);
-        vlcVout.attachViews(this);
-
         components = getComponents();
         if (components != null) {
             for (Component component : components) {
@@ -154,6 +138,17 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
                 viewModel.addUserInteractionSource(component.getView().getUserInteractionEvents());
             }
         }
+
+        final IVLCVout vlcVout = mMediaPlayer.getVLCVout();
+        if (mVideoSurface != null) {
+            vlcVout.setVideoView(mVideoSurface);
+            if (mSubtitlesSurface != null)
+                vlcVout.setSubtitlesView(mSubtitlesSurface);
+        }
+        else {
+            vlcVout.setVideoView(mVideoTexture);
+        }
+        vlcVout.attachViews(this);
 
         if (mOnLayoutChangeListener == null) {
             mOnLayoutChangeListener = new View.OnLayoutChangeListener() {
@@ -204,7 +199,7 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
                     return;
                 final boolean videoSwapped = vtrack.orientation == Media.VideoTrack.Orientation.LeftBottom
                     || vtrack.orientation == Media.VideoTrack.Orientation.RightTop;
-                if (CURRENT_SIZE == SURFACE_FIT_SCREEN) {
+                if (CURRENT_SIZE == SurfaceSize.SURFACE_FIT_SCREEN) {
                     int videoW = vtrack.width;
                     int videoH = vtrack.height;
 

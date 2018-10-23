@@ -14,7 +14,9 @@ public class LoadingPresenter extends Presenter<LoadingView> {
                 uiView.show();
                 break;
             case BUFFERING:
-                if (screenEvent.getBuffering() > 99) {
+                if (screenEvent.getBuffering() < 99) {
+                    uiView.show();
+                } else if (screenEvent.getBuffering() > 99) {
                     uiView.hide();
                 }
                 break;

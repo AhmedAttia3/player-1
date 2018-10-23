@@ -25,6 +25,7 @@ import androidx.lifecycle.ViewModelProviders;
 public class PlayerActivity extends VlcPlayerActivity {
 
     private static final String SAMPLE_URL = "http://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_640x360.m4v";
+    private static final String HLS_URL = "http://magictv.live:25461/live/miko/hami111/451.ts";
 
     public static void start(Context context) {
         Intent starter = new Intent(context, PlayerActivity.class);
@@ -34,7 +35,7 @@ public class PlayerActivity extends VlcPlayerActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setAndPlay(SAMPLE_URL);
+        setAndPlay(HLS_URL);
     }
 
     @Override

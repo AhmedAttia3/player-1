@@ -64,14 +64,18 @@ public abstract class UIView {
     }
 
     public void show() {
-        view.setVisibility(View.VISIBLE);
-        showing = true;
+        if (!showing) {
+            view.setVisibility(View.VISIBLE);
+            showing = true;
+        }
     }
 
     public void hide() {
-        view.setVisibility(View.GONE);
-        showing = false;
-        view.clearFocus();
+        if (showing) {
+            view.setVisibility(View.GONE);
+            showing = false;
+            view.clearFocus();
+        }
     }
 
     public void toggle() {
