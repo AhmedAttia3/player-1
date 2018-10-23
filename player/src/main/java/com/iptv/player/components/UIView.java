@@ -19,6 +19,7 @@ import static android.view.View.NO_ID;
 public abstract class UIView {
 
     private @LayoutRes int layoutResource;
+    @Nullable
     public View view;
     private boolean showing;
     protected MutableLiveData<UserInteraction> userInteractionEvents = new MutableLiveData<>();
@@ -33,9 +34,9 @@ public abstract class UIView {
                 .inflate(layoutResource, parent, false);
             parent.addView(view);
 
-            showing = view.getVisibility() == View.VISIBLE;
-        } else {
-            throw new IllegalStateException("You must setLayout.");
+            if (view != null) {
+                showing = view.getVisibility() == View.VISIBLE;
+            }
         }
 
         init();
@@ -48,7 +49,12 @@ public abstract class UIView {
         if (id == NO_ID) {
             return null;
         }
-        return view.findViewById(id);
+
+        if (view != null) {
+            return view.findViewById(id);
+        }
+
+        return null;
     }
 
     public LiveData<UserInteraction> getUserInteractionEvents() {
@@ -65,21 +71,29 @@ public abstract class UIView {
 
     public void show() {
         if (!showing) {
-            view.setVisibility(View.VISIBLE);
+            if (view != null) {
+                view.setVisibility(View.VISIBLE);
+            }
             showing = true;
         }
     }
 
     public void hide() {
         if (showing) {
-            view.setVisibility(View.GONE);
+            if (view != null) {
+                view.setVisibility(View.GONE);
+            }
             showing = false;
-            view.clearFocus();
+            if (view != null) {
+                view.clearFocus();
+            }
         }
     }
 
     public void toggle() {
-        view.setVisibility(view.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
+        if (view != null) {
+            view.setVisibility(view.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
+        }
         showing = !showing;
     }
 

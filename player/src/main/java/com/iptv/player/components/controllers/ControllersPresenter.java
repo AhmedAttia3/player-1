@@ -10,6 +10,11 @@ public class ControllersPresenter extends Presenter<ControllersView> {
     private boolean isPlaying = false;
 
     @Override
+    public void onViewCreated() {
+
+    }
+
+    @Override
     public void onScreenEvent(ScreenEvent screenEvent) {
         switch (screenEvent.getEvent()) {
             case BUFFERING:

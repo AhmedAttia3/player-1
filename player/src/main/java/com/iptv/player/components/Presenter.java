@@ -19,6 +19,7 @@ public abstract class Presenter<T extends UIView> extends ViewModel {
 
     public void setUiView(T uiView) {
         this.uiView = uiView;
+        onViewCreated();
     }
 
     public void setScreenStateEvent(LiveData<ScreenEvent> screenStateEvent) {
@@ -40,6 +41,7 @@ public abstract class Presenter<T extends UIView> extends ViewModel {
         super.onCleared();
     }
 
+    public abstract void onViewCreated();
     public abstract void onScreenEvent(ScreenEvent screenEvent);
     public abstract boolean onKeyDown(int keyCode, KeyEvent keyEvent, String lockTag);
 }

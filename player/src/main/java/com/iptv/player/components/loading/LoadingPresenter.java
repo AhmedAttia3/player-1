@@ -8,6 +8,11 @@ import com.iptv.player.components.Presenter;
 public class LoadingPresenter extends Presenter<LoadingView> {
 
     @Override
+    public void onViewCreated() {
+
+    }
+
+    @Override
     public void onScreenEvent(ScreenEvent screenEvent) {
         switch (screenEvent.getEvent()) {
             case OPENING:
