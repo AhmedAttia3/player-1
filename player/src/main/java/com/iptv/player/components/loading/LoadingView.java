@@ -8,7 +8,12 @@ public class LoadingView extends UIView {
     private static final String LOCK_TAG = "loadingComponent";
 
     public LoadingView() {
-        super(R.layout.component_loading, false);
+        setLayout(R.layout.component_loading);
+    }
+
+    @Override
+    public void init() {
+
     }
 
     @Override

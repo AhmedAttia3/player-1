@@ -20,12 +20,11 @@ public class SignalStrengthView extends UIView {
     private Chip connectionChip;
 
     public SignalStrengthView() {
-        super(R.layout.component_signal_strength, false);
+        setLayout(R.layout.component_signal_strength);
     }
 
     @Override
-    public void setParent(@NonNull ViewGroup parent) {
-        super.setParent(parent);
+    public void init() {
         connectionChip = findViewById(R.id.connection_chip);
     }
 

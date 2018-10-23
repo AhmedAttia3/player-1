@@ -23,9 +23,8 @@ public abstract class UIView {
     private boolean showing;
     protected MutableLiveData<UserInteraction> userInteractionEvents = new MutableLiveData<>();
 
-    public UIView(@LayoutRes int layoutResource, boolean isShowing) {
+    public void setLayout(@LayoutRes int layoutResource) {
         this.layoutResource = layoutResource;
-        this.showing = isShowing;
     }
 
     public void setParent(@NonNull ViewGroup parent) {
@@ -33,8 +32,16 @@ public abstract class UIView {
             view = LayoutInflater.from(parent.getContext())
                 .inflate(layoutResource, parent, false);
             parent.addView(view);
+
+            showing = view.getVisibility() == View.VISIBLE;
+        } else {
+            throw new IllegalStateException("You must setLayout.");
         }
+
+        init();
     }
+
+    public abstract void init();
 
     @Nullable
     protected final <T extends View> T findViewById(@IdRes int id) {

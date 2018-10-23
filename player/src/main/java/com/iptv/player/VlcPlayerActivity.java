@@ -3,6 +3,7 @@ package com.iptv.player;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.res.Configuration;
+import android.graphics.PixelFormat;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -10,6 +11,7 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.SurfaceView;
+import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
@@ -43,6 +45,8 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
     ConnectionClassManager.ConnectionClassStateChangeListener {
 
     private static final String TAG = "VlcPlayerActivity";
+    private static final boolean USE_SURFACE_VIEW = true;
+    private static final boolean ENABLE_SUBTITLES = true;
 
     private static final int SURFACE_BEST_FIT = 0;
     private static final int SURFACE_FIT_SCREEN = 1;
@@ -50,10 +54,13 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
     private static final int SURFACE_16_9 = 3;
     private static final int SURFACE_4_3 = 4;
     private static final int SURFACE_ORIGINAL = 5;
-    private static int CURRENT_SIZE = SURFACE_BEST_FIT;
+    private static int CURRENT_SIZE = SURFACE_FIT_SCREEN;
 
     private FrameLayout mVideoSurfaceFrame = null;
     private SurfaceView mVideoSurface = null;
+    private SurfaceView mSubtitlesSurface = null;
+    private TextureView mVideoTexture = null;
+    private View mVideoView = null;
 
     private final Handler mHandler = new Handler();
     private View.OnLayoutChangeListener mOnLayoutChangeListener = null;
@@ -93,69 +100,27 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
         mMediaPlayer = new MediaPlayer(mLibVLC);
 
         mVideoSurfaceFrame = findViewById(R.id.video_surface_frame);
-        ViewStub stub = findViewById(R.id.surface_stub);
-        mVideoSurface = (SurfaceView) stub.inflate();
-
-        final IVLCVout vlcVout = mMediaPlayer.getVLCVout();
-        vlcVout.setVideoView(mVideoSurface);
-
-        vlcVout.attachViews(this);
-        mMediaPlayer.setEventListener(this);
+        if (USE_SURFACE_VIEW) {
+            ViewStub stub = findViewById(R.id.surface_stub);
+            mVideoSurface = (SurfaceView) stub.inflate();
+            if (ENABLE_SUBTITLES) {
+                stub = findViewById(R.id.subtitles_surface_stub);
+                mSubtitlesSurface = (SurfaceView) stub.inflate();
+                mSubtitlesSurface.setZOrderMediaOverlay(true);
+                mSubtitlesSurface.getHolder().setFormat(PixelFormat.TRANSLUCENT);
+            }
+            mVideoView = mVideoSurface;
+        }
+        else
+        {
+            ViewStub stub = findViewById(R.id.texture_stub);
+            mVideoTexture = (TextureView) stub.inflate();
+            mVideoView = mVideoTexture;
+        }
 
         mDeviceBandwidthSampler = DeviceBandwidthSampler.getInstance();
         mConnectionClassManager = ConnectionClassManager.getInstance();
         mDeviceBandwidthSampler.startSampling();
-    }
-
-//    public abstract void initComponents(ViewGroup parent, LiveData<ScreenEvent> screenStateEvent);
-//    public abstract void initUserInteractionEvents();
-
-    public abstract List<Component> getComponents();
-
-//    public void addComponent(Component... componentsArgs) {
-//        components.addAll(Arrays.asList(componentsArgs));
-//    }
-
-    public void setMedia(String url) {
-        final Media media = new Media(mLibVLC, Uri.parse(url));
-        mMediaPlayer.setMedia(media);
-        media.release();
-    }
-
-    public void setAndPlay(String url) {
-        final Media media = new Media(mLibVLC, Uri.parse(url));
-        mMediaPlayer.setMedia(media);
-        media.release();
-
-        play();
-    }
-
-    public void play() {
-        mMediaPlayer.play();
-    }
-
-    public void pause() {
-        mMediaPlayer.pause();
-    }
-
-    public void stop() {
-        mMediaPlayer.stop();
-    }
-
-    public void minus(int time) {
-        mMediaPlayer.setTime(mMediaPlayer.getTime() - time);
-    }
-
-    public void plus(int time) {
-        mMediaPlayer.setTime(mMediaPlayer.getTime() + time);
-    }
-
-    public void seekTo(int time) {
-        mMediaPlayer.setTime(time);
-    }
-
-    public long getTime() {
-        return mMediaPlayer.getTime();
     }
 
     @Override
@@ -170,6 +135,16 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
     protected void onStart() {
         super.onStart();
 
+        final IVLCVout vlcVout = mMediaPlayer.getVLCVout();
+        if (mVideoSurface != null) {
+            vlcVout.setVideoView(mVideoSurface);
+            if (mSubtitlesSurface != null)
+                vlcVout.setSubtitlesView(mSubtitlesSurface);
+        }
+        else
+            vlcVout.setVideoView(mVideoTexture);
+        vlcVout.attachViews(this);
+
         components = getComponents();
         if (components != null) {
             for (Component component : components) {
@@ -182,12 +157,8 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
 
         if (mOnLayoutChangeListener == null) {
             mOnLayoutChangeListener = new View.OnLayoutChangeListener() {
-                private final Runnable mRunnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        updateVideoSurfaces();
-                    }
-                };
+                private final Runnable mRunnable = () -> updateVideoSurfaces();
+
                 @Override
                 public void onLayoutChange(View v, int left, int top, int right,
                                            int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
@@ -217,34 +188,6 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
         mConnectionClassManager.remove(this);
 
         super.onStop();
-    }
-
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-        if (hasFocus) {
-            hideSystemUI();
-        }
-    }
-
-    @SuppressLint("InlinedApi")
-    private void hideSystemUI() {
-        View decorView = getWindow().getDecorView();
-        decorView.setSystemUiVisibility(
-            View.SYSTEM_UI_FLAG_LOW_PROFILE
-                | View.SYSTEM_UI_FLAG_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
-    }
-
-    private void showSystemUI() {
-        View decorView = getWindow().getDecorView();
-        decorView.setSystemUiVisibility(
-            View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
     }
 
     private void changeMediaPlayerLayout(int displayW, int displayH) {
@@ -317,12 +260,12 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
 
         mMediaPlayer.getVLCVout().setWindowSize(sw, sh);
 
-        ViewGroup.LayoutParams lp = mVideoSurface.getLayoutParams();
+        ViewGroup.LayoutParams lp = mVideoView.getLayoutParams();
         if (mVideoWidth * mVideoHeight == 0) {
             /* Case of OpenGL vouts: handles the placement of the video using MediaPlayer API */
             lp.width  = ViewGroup.LayoutParams.MATCH_PARENT;
             lp.height = ViewGroup.LayoutParams.MATCH_PARENT;
-            mVideoSurface.setLayoutParams(lp);
+            mVideoView.setLayoutParams(lp);
             lp = mVideoSurfaceFrame.getLayoutParams();
             lp.width  = ViewGroup.LayoutParams.MATCH_PARENT;
             lp.height = ViewGroup.LayoutParams.MATCH_PARENT;
@@ -398,7 +341,9 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
         // set display size
         lp.width  = (int) Math.ceil(dw * mVideoWidth / mVideoVisibleWidth);
         lp.height = (int) Math.ceil(dh * mVideoHeight / mVideoVisibleHeight);
-        mVideoSurface.setLayoutParams(lp);
+        mVideoView.setLayoutParams(lp);
+        if (mSubtitlesSurface != null)
+            mSubtitlesSurface.setLayoutParams(lp);
 
         // set frame size (crop if necessary)
         lp = mVideoSurfaceFrame.getLayoutParams();
@@ -406,7 +351,9 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
         lp.height = (int) Math.floor(dh);
         mVideoSurfaceFrame.setLayoutParams(lp);
 
-        mVideoSurface.invalidate();
+        mVideoView.invalidate();
+        if (mSubtitlesSurface != null)
+            mSubtitlesSurface.invalidate();
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
@@ -419,6 +366,78 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
         mVideoSarNum = sarNum;
         mVideoSarDen = sarDen;
         updateVideoSurfaces();
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            hideSystemUI();
+        }
+    }
+
+    @SuppressLint("InlinedApi")
+    private void hideSystemUI() {
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(
+            View.SYSTEM_UI_FLAG_LOW_PROFILE
+                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+    }
+
+    private void showSystemUI() {
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(
+            View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+    }
+
+    public abstract List<Component> getComponents();
+
+    public void setMedia(String url) {
+        final Media media = new Media(mLibVLC, Uri.parse(url));
+        mMediaPlayer.setMedia(media);
+        media.release();
+    }
+
+    public void setAndPlay(String url) {
+        final Media media = new Media(mLibVLC, Uri.parse(url));
+        mMediaPlayer.setMedia(media);
+        media.release();
+
+        play();
+    }
+
+    public void play() {
+        mMediaPlayer.play();
+    }
+
+    public void pause() {
+        mMediaPlayer.pause();
+    }
+
+    public void stop() {
+        mMediaPlayer.stop();
+    }
+
+    public void minus(int time) {
+        mMediaPlayer.setTime(mMediaPlayer.getTime() - time);
+    }
+
+    public void plus(int time) {
+        mMediaPlayer.setTime(mMediaPlayer.getTime() + time);
+    }
+
+    public void seekTo(int time) {
+        mMediaPlayer.setTime(time);
+    }
+
+    public long getTime() {
+        return mMediaPlayer.getTime();
     }
 
     @Override

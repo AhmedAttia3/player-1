@@ -25,11 +25,11 @@ public class VlcPlayerViewModel extends ViewModel {
     }
 
     @MainThread
-    void setScreenStateEvent(ScreenEvent screenEvent) {
+    public void setScreenStateEvent(ScreenEvent screenEvent) {
         screenStateEventLiveData.setValue(screenEvent);
     }
 
-    void postScreenStateEvent(ScreenEvent screenEvent) {
+    public void postScreenStateEvent(ScreenEvent screenEvent) {
         screenStateEventLiveData.postValue(screenEvent);
     }
 

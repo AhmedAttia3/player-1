@@ -13,13 +13,14 @@ import com.iptv.player.eventTypes.UserInteractionEvent;
 import com.iptv.player.components.UIView;
 
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 
 public class ControllersView extends UIView implements View.OnClickListener {
 
-    public static final String LOCK_TAG = "controllersComponent";
+    private static final String LOCK_TAG = "controllersComponent";
 
     private MaterialButton minus10;
     private MaterialButton plus10;
@@ -34,23 +35,21 @@ public class ControllersView extends UIView implements View.OnClickListener {
     private final Runnable hideRunnable = this::hide;
 
     public ControllersView() {
-        super(R.layout.component_controllers, false);
+        setLayout(R.layout.component_controllers);
     }
 
     @Override
-    public void setParent(@NonNull ViewGroup parent) {
-        super.setParent(parent);
+    public void init() {
+        minus10 = findViewById(R.id.minus_10);
+        Objects.requireNonNull(minus10).setOnClickListener(this);
+        plus10 = findViewById(R.id.plus_10);
+        Objects.requireNonNull(plus10).setOnClickListener(this);
+        playPause = findViewById(R.id.play_pause);
+        Objects.requireNonNull(playPause).setOnClickListener(this);
 
-        minus10 = view.findViewById(R.id.minus_10);
-        minus10.setOnClickListener(this);
-        plus10 = view.findViewById(R.id.plus_10);
-        plus10.setOnClickListener(this);
-        playPause = view.findViewById(R.id.play_pause);
-        playPause.setOnClickListener(this);
-
-        currentTime = view.findViewById(R.id.current_time);
-        mediaTime = view.findViewById(R.id.media_time);
-        seekBar = view.findViewById(R.id.seek_bar);
+        currentTime = findViewById(R.id.current_time);
+        mediaTime = findViewById(R.id.media_time);
+        seekBar = findViewById(R.id.seek_bar);
 
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override

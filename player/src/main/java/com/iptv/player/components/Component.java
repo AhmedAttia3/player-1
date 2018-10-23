@@ -8,7 +8,6 @@ public class Component<T extends UIView> {
     public Component(T view, Presenter<T> presenter) {
         this.view = view;
         this.presenter = presenter;
-        this.presenter.setUiView(this.view);
     }
 
     public T getView() {
@@ -17,5 +16,9 @@ public class Component<T extends UIView> {
 
     public Presenter<T> getPresenter() {
         return presenter;
+    }
+
+    public void setData(int key, Object value) {
+        presenter.setData(key, value);
     }
 }
