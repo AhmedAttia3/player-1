@@ -393,6 +393,10 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
 
     public abstract List<Component> getComponents();
 
+    public static void setScreenSize(SurfaceSize size) {
+        CURRENT_SIZE = size;
+    }
+
     public void setMedia(String url) {
         final Media media = new Media(mLibVLC, Uri.parse(url));
         mMediaPlayer.setMedia(media);

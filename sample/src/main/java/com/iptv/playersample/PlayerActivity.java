@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.ViewGroup;
 
+import com.iptv.player.SurfaceSize;
 import com.iptv.player.VlcPlayerActivity;
 import com.iptv.player.components.Component;
 import com.iptv.player.components.controllers.ControllersPresenter;
@@ -25,7 +26,7 @@ import androidx.lifecycle.ViewModelProviders;
 public class PlayerActivity extends VlcPlayerActivity {
 
     private static final String SAMPLE_URL = "http://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_640x360.m4v";
-    private static final String HLS_URL = "http://magictv.live:25461/live/miko/hami111/451.ts";
+    private static final String HLS_URL = "http://magictv.live:25461/live/miko/hami111/8875.ts";
 
     public static void start(Context context) {
         Intent starter = new Intent(context, PlayerActivity.class);
@@ -35,6 +36,7 @@ public class PlayerActivity extends VlcPlayerActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setScreenSize(SurfaceSize.SURFACE_FILL);
         setAndPlay(HLS_URL);
     }
 

@@ -11,5 +11,19 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         findViewById(R.id.btn).setOnClickListener(v -> PlayerActivity.start(this));
+
+//        subMenuComonent.setCallcack();
+//
+//        Player.Builder()
+//            .setMainCategory()
+//            .setCategoty()
+//            .setMedia()
+//            .enableLoading()
+//            .addComponent()
+//            .addComponent()
+//            .addComponent()
+//            .addComponent()
+//            .addComponent()
+//            .start();
     }
 }
