@@ -5,10 +5,10 @@ android {
 
     defaultConfig {
         applicationId "com.iptv.playersample"
-        minSdkVersion 16
+        minSdkVersion 17
         targetSdkVersion 28
         versionCode 1
-        versionName "1.0.7"
+        versionName "1.1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
