@@ -3,6 +3,7 @@ package com.iptv.player.components.controllers;
 import android.os.Handler;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -22,9 +23,9 @@ public class ControllersView extends UIView implements View.OnClickListener {
 
     private static final String LOCK_TAG = "controllersComponent";
 
-    private MaterialButton minus10;
-    private MaterialButton plus10;
-    private MaterialButton playPause;
+    private ImageButton minus10;
+    private ImageButton plus10;
+    private ImageButton playPause;
     private boolean isPlaying;
 
     private TextView currentTime;
@@ -83,6 +84,16 @@ public class ControllersView extends UIView implements View.OnClickListener {
     }
 
     @Override
+    public void toggle() {
+        requestOnKeyLock(LOCK_TAG);
+        if (!isShowing()) {
+            playPause.requestFocus();
+        }
+        super.toggle();
+        startAutoHide();
+    }
+
+    @Override
     public void hide() {
         super.hide();
         stopAutoHide();
@@ -121,22 +132,22 @@ public class ControllersView extends UIView implements View.OnClickListener {
 
     void play() {
         isPlaying = true;
-        playPause.setIconResource(R.drawable.ic_pause_white);
+        playPause.setImageResource(R.drawable.ic_pause_white);
     }
 
     void pause() {
         isPlaying = false;
-        playPause.setIconResource(R.drawable.ic_play_arrow_white);
+        playPause.setImageResource(R.drawable.ic_play_arrow_white);
     }
 
     void stopped() {
         isPlaying = false;
-        playPause.setIconResource(R.drawable.ic_play_arrow_white);
+        playPause.setImageResource(R.drawable.ic_play_arrow_white);
     }
 
     public void end() {
         isPlaying = false;
-        playPause.setIconResource(R.drawable.ic_play_arrow_white);
+        playPause.setImageResource(R.drawable.ic_play_arrow_white);
     }
 
     void updateTime(long value) {

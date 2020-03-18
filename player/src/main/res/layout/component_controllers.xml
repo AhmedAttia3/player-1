@@ -49,7 +49,7 @@
         app:barrierDirection="top"
         app:constraint_referenced_ids="current_time, seek_bar, media_time" />
 
-    <com.google.android.material.button.MaterialButton
+    <ImageButton
         android:id="@+id/minus_10"
         style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
         android:layout_width="wrap_content"
@@ -57,46 +57,48 @@
         android:minWidth="0dp"
         android:nextFocusRight="@id/play_pause"
         app:cornerRadius="4dp"
-        app:icon="@drawable/ic_fast_rewind_white"
+        android:src="@drawable/ic_fast_rewind_white"
         app:iconPadding="0dp"
         app:iconTint="@android:color/white"
         app:layout_constraintBottom_toTopOf="@id/seek_bar_barrier"
         app:layout_constraintEnd_toStartOf="@id/play_pause"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="parent"
-        app:strokeColor="@android:color/transparent" />
+        app:strokeColor="@android:color/transparent"
+        android:background="@drawable/selectable_item_background"  />
 
-    <com.google.android.material.button.MaterialButton
+    <ImageButton
         android:id="@+id/play_pause"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
         android:minWidth="0dp"
         android:nextFocusLeft="@id/minus_10"
         android:nextFocusRight="@id/plus_10"
         app:cornerRadius="4dp"
-        app:icon="@drawable/ic_play_arrow_white"
+        android:src="@drawable/ic_play_arrow_white"
         app:iconPadding="0dp"
         app:iconTint="@android:color/white"
         app:layout_constraintBottom_toTopOf="@id/seek_bar_barrier"
         app:layout_constraintEnd_toStartOf="@id/plus_10"
         app:layout_constraintStart_toEndOf="@id/minus_10"
-        app:strokeColor="@android:color/transparent" />
-
-    <com.google.android.material.button.MaterialButton
+        app:strokeColor="@android:color/transparent"
+        android:background="@drawable/selectable_item_background" />
+    <ImageButton
         android:id="@+id/plus_10"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
         android:minWidth="0dp"
         android:nextFocusLeft="@id/play_pause"
         app:cornerRadius="4dp"
-        app:icon="@drawable/ic_fast_forward_white"
+        android:src="@drawable/ic_fast_forward_white"
         app:iconPadding="0dp"
         app:iconTint="@android:color/white"
         app:layout_constraintBottom_toTopOf="@id/seek_bar_barrier"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/play_pause"
-        app:strokeColor="@android:color/transparent" />
+        app:strokeColor="@android:color/transparent"
+        android:background="@drawable/selectable_item_background"  />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -36,6 +36,13 @@ public class SignalStrengthView extends UIView {
     }
 
     @Override
+    public void toggle() {
+        super.toggle();
+        handler.removeCallbacks(hideRunnable);
+        handler.postDelayed(hideRunnable, 5000);
+    }
+
+    @Override
     public String getLockTag() {
         return LOCK_TAG;
     }
