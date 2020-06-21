@@ -26,7 +26,7 @@ import androidx.lifecycle.ViewModelProviders;
 public class PlayerActivity extends VlcPlayerActivity {
 
     private static final String SAMPLE_URL = "http://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_640x360.m4v";
-    private static final String HLS_URL = "http://tptv.cz:80/movie/9034567839485/8847Uf092347SR7/82265.mkv";
+    private static final String HLS_URL = "http://78.46.64.2/media/movies1/15316.mkv";
 
     public static void start(Context context) {
         Intent starter = new Intent(context, PlayerActivity.class);

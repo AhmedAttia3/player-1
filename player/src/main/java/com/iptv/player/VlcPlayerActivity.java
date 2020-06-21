@@ -88,8 +88,11 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
 
         final ArrayList<String> args = new ArrayList<>();
         args.add("-vvv");
+        args.add("--vout=android-display");
+        args.add("--aout=opensles");
         mLibVLC = new LibVLC(this, args);
         mMediaPlayer = new MediaPlayer(mLibVLC);
+        mMediaPlayer.setAudioOutput("opensles");
 
         mVideoSurfaceFrame = findViewById(R.id.video_surface_frame);
         if (USE_SURFACE_VIEW) {
