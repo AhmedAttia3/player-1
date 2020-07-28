@@ -20,6 +20,15 @@ import android.widget.FrameLayout;
 import com.facebook.network.connectionclass.ConnectionClassManager;
 import com.facebook.network.connectionclass.ConnectionQuality;
 import com.facebook.network.connectionclass.DeviceBandwidthSampler;
+import com.google.android.gms.cast.MediaInfo;
+import com.google.android.gms.cast.MediaLoadRequestData;
+import com.google.android.gms.cast.MediaMetadata;
+import com.google.android.gms.cast.framework.CastButtonFactory;
+import com.google.android.gms.cast.framework.CastContext;
+import com.google.android.gms.cast.framework.CastSession;
+import com.google.android.gms.cast.framework.SessionManagerListener;
+import com.google.android.gms.cast.framework.media.RemoteMediaClient;
+import com.google.android.gms.common.images.WebImage;
 import com.iptv.player.components.Component;
 import com.iptv.player.eventTypes.ScreenEvent;
 import com.iptv.player.eventTypes.ScreenStateEvent;
@@ -36,6 +45,7 @@ import java.util.List;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.mediarouter.app.MediaRouteButton;
 
 public abstract class VlcPlayerActivity extends AppCompatActivity implements
     IVLCVout.OnNewVideoLayoutListener,
@@ -73,11 +83,28 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
     private ConstraintLayout componentContainer;
     List<Component> components;
     private boolean isOnKeyDownConsumed = true;
+    private CastContext mCastContext;
+    private PlaybackLocation mLocation;
+
+    public enum PlaybackLocation {
+        LOCAL,
+        REMOTE
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_vlc_player);
+
+
+        setupCastListener();
+        mCastContext = CastContext.getSharedInstance(this);
+        mCastSession = mCastContext.getSessionManager().getCurrentCastSession();
+
+        MediaRouteButton mediaRouteButton = findViewById(R.id.mediaRouteButton);
+        CastButtonFactory.setUpMediaRouteButton(getApplicationContext(), mediaRouteButton);
+
+
         viewModel = ViewModelProviders.of(this).get(VlcPlayerViewModel.class);
 
         componentContainer = findViewById(R.id.view_container);
@@ -197,6 +224,13 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
 
     @Override
     protected void onResume() {
+        mCastContext.getSessionManager().addSessionManagerListener(
+                mSessionManagerListener, CastSession.class);
+        if (mCastSession != null && mCastSession.isConnected()) {
+            updatePlaybackLocation(PlaybackLocation.REMOTE);
+        } else {
+            updatePlaybackLocation(PlaybackLocation.LOCAL);
+        }
         super.onResume();
 
         if(mMediaPlayer!=null){
@@ -427,8 +461,9 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
         mMediaPlayer.setMedia(media);
         media.release();
     }
-
+private String url = "";
     public void setAndPlay(String url) {
+        this.url = url;
         final Media media = new Media(mLibVLC, Uri.parse(url));
         mMediaPlayer.setMedia(media);
         media.release();
@@ -477,12 +512,15 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
                 viewModel.setScreenStateEvent(new ScreenEvent(event.getBuffering()));
                 break;
             case MediaPlayer.Event.Playing:
+                mPlaybackState = PlaybackState.PLAYING;
                 viewModel.setScreenStateEvent(new ScreenEvent(ScreenStateEvent.PLAYING));
                 break;
             case MediaPlayer.Event.Paused:
+                mPlaybackState = PlaybackState.PAUSED;
                 viewModel.setScreenStateEvent(new ScreenEvent(ScreenStateEvent.PAUSES));
                 break;
             case MediaPlayer.Event.Stopped:
+                mPlaybackState = PlaybackState.IDLE;
                 long i = 0;
                 if(event.getTimeChanged()!=event.getLengthChanged())
                     i = event.getTimeChanged();
@@ -556,5 +594,137 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
     @Override
     public void onBandwidthStateChange(ConnectionQuality bandwidthState) {
         runOnUiThread(() -> viewModel.postScreenStateEvent(new ScreenEvent(bandwidthState)));
+    }
+
+    // adding cast
+    private CastSession mCastSession;
+    private SessionManagerListener<CastSession> mSessionManagerListener;
+
+    private void setupCastListener() {
+        mSessionManagerListener = new SessionManagerListener<CastSession>() {
+
+            @Override
+            public void onSessionEnded(CastSession session, int error) {
+                onApplicationDisconnected();
+            }
+
+            @Override
+            public void onSessionResumed(CastSession session, boolean wasSuspended) {
+                onApplicationConnected(session);
+            }
+
+            @Override
+            public void onSessionResumeFailed(CastSession session, int error) {
+                onApplicationDisconnected();
+            }
+
+            @Override
+            public void onSessionStarted(CastSession session, String sessionId) {
+                onApplicationConnected(session);
+            }
+
+            @Override
+            public void onSessionStartFailed(CastSession session, int error) {
+                onApplicationDisconnected();
+            }
+
+            @Override
+            public void onSessionStarting(CastSession session) {}
+
+            @Override
+            public void onSessionEnding(CastSession session) {}
+
+            @Override
+            public void onSessionResuming(CastSession session, String sessionId) {}
+
+            @Override
+            public void onSessionSuspended(CastSession session, int reason) {}
+
+            private void onApplicationConnected(CastSession castSession) {
+                mCastSession = castSession;
+                if (null != mMediaPlayer) {
+
+//                    if (mMediaPlayer.getPlayerState() == MediaPlayer.Event.Playing) {
+                        Log.e("ahmed","Ok1");
+                        mMediaPlayer.pause();
+                        loadRemoteMedia((int)mMediaPlayer.getTime(), true);
+                        return;
+//                    } else {
+//                        Log.e("ahmed","Ok2");
+//                        mPlaybackState = PlaybackState.IDLE;
+//                        updatePlaybackLocation(PlaybackLocation.REMOTE);
+//                    }
+                }
+//                updatePlayButton(mPlaybackState);
+                supportInvalidateOptionsMenu();
+            }
+
+            private void onApplicationDisconnected() {
+                updatePlaybackLocation(PlaybackLocation.LOCAL);
+                mPlaybackState = PlaybackState.IDLE;
+                mLocation = PlaybackLocation.LOCAL;
+//                updatePlayButton(mPlaybackState);
+                supportInvalidateOptionsMenu();
+            }
+        };
+    }
+
+    private void updatePlaybackLocation(PlaybackLocation location) {
+        mLocation = location;
+//        if (location == PlaybackLocation.LOCAL) {
+//            if (mPlaybackState == PlaybackState.PLAYING
+//                    || mPlaybackState == PlaybackState.BUFFERING) {
+//                setCoverArtStatus(null);
+//                startControllersTimer();
+//            } else {
+//                stopControllersTimer();
+//                setCoverArtStatus(mSelectedMedia.getImage(0));
+//            }
+//        } else {
+//            stopControllersTimer();
+//            setCoverArtStatus(mSelectedMedia.getImage(0));
+//            updateControllersVisibility(false);
+//        }
+    }
+
+
+    private PlaybackState mPlaybackState;
+    public enum PlaybackState {
+        PLAYING, PAUSED, BUFFERING, IDLE
+    }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mCastContext.getSessionManager().removeSessionManagerListener(
+                mSessionManagerListener, CastSession.class);
+    }
+    private void loadRemoteMedia(int position, boolean autoPlay) {
+        if (mCastSession == null) {
+            return;
+        }
+        RemoteMediaClient remoteMediaClient = mCastSession.getRemoteMediaClient();
+        if (remoteMediaClient == null) {
+            return;
+        }
+        remoteMediaClient.load(new MediaLoadRequestData.Builder()
+                .setMediaInfo(buildMediaInfo())
+                .setAutoplay(autoPlay)
+                .setCurrentTime(position).build());
+    }
+
+    private MediaInfo buildMediaInfo() {
+        MediaMetadata movieMetadata = new MediaMetadata(MediaMetadata.MEDIA_TYPE_MOVIE);
+
+//        movieMetadata.putString(MediaMetadata.KEY_SUBTITLE, mSelectedMedia.getStudio());
+        movieMetadata.putString(MediaMetadata.KEY_TITLE, "testTitle");
+        movieMetadata.addImage(new WebImage(Uri.parse("https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-1.2.1&w=1000&q=80")));
+        movieMetadata.addImage(new WebImage(Uri.parse("https://i2.wp.com/mediationinyourpocket.com/wp-content/uploads/2018/10/background-calm-clouds-747964.jpg?fit=4000%2C2525&ssl=1")));
+
+        return new MediaInfo.Builder(url)
+                .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
+                .setContentType("videos/mkv")
+                .setMetadata(movieMetadata)
+//                .setStreamDuration(mSelectedMedia.getDuration() * 1000)
+                .build();
     }
 }

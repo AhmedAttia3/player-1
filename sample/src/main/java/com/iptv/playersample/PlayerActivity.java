@@ -27,7 +27,7 @@ import androidx.lifecycle.ViewModelProviders;
 public class PlayerActivity extends VlcPlayerActivity {
 
     private static final String SAMPLE_URL = "http://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_640x360.m4v";
-    private static final String HLS_URL = "http://78.46.64.2/media/movies1/15316.mkv";
+    private static final String HLS_URL = "https://commondatastorage.googleapis.com/gtv-videos-bucket/CastVideos/mp4/DesigningForGoogleCast.mp4";
 
     public static void start(Context context) {
         Intent starter = new Intent(context, PlayerActivity.class);
@@ -70,7 +70,7 @@ public class PlayerActivity extends VlcPlayerActivity {
 
         components.add(controllersViewComponent);
         components.add(loadingViewComponent);
-        components.add(signalStrengthViewComponent);
+//        components.add(signalStrengthViewComponent);
 
         return components;
     }
