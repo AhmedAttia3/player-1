@@ -3,6 +3,7 @@ package com.iptv.playersample;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.ViewGroup;
 
@@ -38,6 +39,13 @@ public class PlayerActivity extends VlcPlayerActivity {
         super.onCreate(savedInstanceState);
         setScreenSize(SurfaceSize.SURFACE_FILL);
         setAndPlay(HLS_URL);
+
+        setResumeTime(3093519);
+    }
+
+    @Override
+    public void pausedIn(int i) {
+        Log.e("ahmed", String.valueOf(i));
     }
 
     @Override

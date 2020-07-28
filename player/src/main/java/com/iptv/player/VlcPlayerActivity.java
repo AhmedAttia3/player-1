@@ -118,19 +118,6 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
         mDeviceBandwidthSampler = DeviceBandwidthSampler.getInstance();
         mConnectionClassManager = ConnectionClassManager.getInstance();
         mDeviceBandwidthSampler.startSampling();
-    }
-
-    @Override
-    protected void onDestroy() {
-        mMediaPlayer.release();
-        mLibVLC.release();
-        mDeviceBandwidthSampler.stopSampling();
-        super.onDestroy();
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
 
         components = getComponents();
         if (components != null) {
@@ -141,6 +128,23 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
                 viewModel.addUserInteractionSource(component.getView().getUserInteractionEvents());
             }
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        Log.e("onDestroy", String.valueOf(mMediaPlayer.getTime()));
+        pausedIn((int)mMediaPlayer.getTime());
+        mMediaPlayer.release();
+        mLibVLC.release();
+        mDeviceBandwidthSampler.stopSampling();
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+
 
         final IVLCVout vlcVout = mMediaPlayer.getVLCVout();
         if (mVideoSurface != null) {
@@ -179,13 +183,27 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
             mOnLayoutChangeListener = null;
         }
 
-        mMediaPlayer.stop();
+        mMediaPlayer.pause();
 
         mMediaPlayer.getVLCVout().detachViews();
 
         mConnectionClassManager.remove(this);
 
         super.onStop();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if(mMediaPlayer!=null){
+//            if(!mMediaPlayer.isPlaying())
+            mVideoSurfaceFrame.addOnLayoutChangeListener(mOnLayoutChangeListener);
+
+            mConnectionClassManager.register(this);
+            mMediaPlayer.play();
+
+        }
     }
 
     private void changeMediaPlayerLayout(int displayW, int displayH) {
@@ -395,6 +413,7 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
     }
 
     public abstract List<Component> getComponents();
+    public abstract void  pausedIn(int i);
 
     public static void setScreenSize(SurfaceSize size) {
         CURRENT_SIZE = size;
@@ -461,9 +480,11 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
                 viewModel.setScreenStateEvent(new ScreenEvent(ScreenStateEvent.PAUSES));
                 break;
             case MediaPlayer.Event.Stopped:
+                pausedIn(0);
                 viewModel.setScreenStateEvent(new ScreenEvent(ScreenStateEvent.STOPPED));
                 break;
             case MediaPlayer.Event.LengthChanged:
+                mMediaPlayer.setTime(resumeTime);
                 viewModel.setScreenStateEvent(new ScreenEvent(event.getLengthChanged(), ScreenStateEvent.LENGTH_CHANGED));
                 break;
             case MediaPlayer.Event.TimeChanged:
@@ -472,6 +493,11 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
         }
     }
 
+    public void setResumeTime(long resumeTime) {
+        this.resumeTime = resumeTime;
+    }
+
+    long resumeTime = 0;
     private void onUserInteraction(UserInteraction userInteraction) {
         switch (userInteraction.getEvent()) {
             case PLAY_MEDIA:
