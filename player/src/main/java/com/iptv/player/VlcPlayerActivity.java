@@ -133,7 +133,10 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
     @Override
     protected void onDestroy() {
         Log.e("onDestroy", String.valueOf(mMediaPlayer.getTime()));
-        pausedIn((int)mMediaPlayer.getTime());
+        long i  = 0;
+        if(mMediaPlayer.getLength()!= mMediaPlayer.getTime())
+            i = mMediaPlayer.getTime();
+        pausedIn((int)i);
         mMediaPlayer.release();
         mLibVLC.release();
         mDeviceBandwidthSampler.stopSampling();
@@ -480,7 +483,10 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
                 viewModel.setScreenStateEvent(new ScreenEvent(ScreenStateEvent.PAUSES));
                 break;
             case MediaPlayer.Event.Stopped:
-                pausedIn(0);
+                long i = 0;
+                if(event.getTimeChanged()!=event.getLengthChanged())
+                    i = event.getTimeChanged();
+                pausedIn((int)i);
                 viewModel.setScreenStateEvent(new ScreenEvent(ScreenStateEvent.STOPPED));
                 break;
             case MediaPlayer.Event.LengthChanged:

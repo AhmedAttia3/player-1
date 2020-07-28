@@ -40,7 +40,7 @@ public class PlayerActivity extends VlcPlayerActivity {
         setScreenSize(SurfaceSize.SURFACE_FILL);
         setAndPlay(HLS_URL);
 
-        setResumeTime(3093519);
+//        setResumeTime(3093519);
     }
 
     @Override
