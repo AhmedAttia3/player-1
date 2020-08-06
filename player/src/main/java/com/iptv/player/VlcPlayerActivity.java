@@ -491,7 +491,7 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
         mMediaPlayer.setMedia(media);
         media.release();
         if (mCastSession != null && mCastSession.isConnected()) {
-            loadRemoteMedia(0, true);
+            loadRemoteMedia((int)resumeTime, true);
         }else {
 
             play();
@@ -633,9 +633,6 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
     }
 
     // adding cast
-
-    private final String NAMESPACE = "urn:x-cast:ooyala";
-    private final String APP_ID = "4172C76F";
 
     private CastContext mCastContext;
     private PlaybackLocation mLocation;
