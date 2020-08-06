@@ -41,6 +41,12 @@
 
     </FrameLayout>
 
+    <com.android.volley.toolbox.NetworkImageView
+        android:id="@+id/videoImage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:scaleType="centerCrop"/>
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/view_container"
         android:layout_width="0dp"
@@ -56,6 +62,21 @@
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:layout_margin="32dp"/>
+        android:layout_margin="32dp"
+        android:visibility="gone"
+        android:textColor="@android:color/white"
+        style="@style/Theme.CastVideosDark"
+        android:background="@drawable/selectable_item_background"/>
+
+
+    <fragment
+        android:id="@+id/castMiniController"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:visibility="gone"
+        class="com.google.android.gms.cast.framework.media.widget.MiniControllerFragment"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

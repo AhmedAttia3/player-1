@@ -2,6 +2,7 @@ package com.iptv.player;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.PixelFormat;
 import android.net.Uri;
@@ -17,9 +18,12 @@ import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.widget.FrameLayout;
 
+import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.NetworkImageView;
 import com.facebook.network.connectionclass.ConnectionClassManager;
 import com.facebook.network.connectionclass.ConnectionQuality;
 import com.facebook.network.connectionclass.DeviceBandwidthSampler;
+import com.google.android.gms.cast.CastMediaControlIntent;
 import com.google.android.gms.cast.MediaInfo;
 import com.google.android.gms.cast.MediaLoadRequestData;
 import com.google.android.gms.cast.MediaMetadata;
@@ -28,8 +32,12 @@ import com.google.android.gms.cast.framework.CastContext;
 import com.google.android.gms.cast.framework.CastSession;
 import com.google.android.gms.cast.framework.SessionManagerListener;
 import com.google.android.gms.cast.framework.media.RemoteMediaClient;
+import com.google.android.gms.cast.framework.media.widget.ExpandedControllerActivity;
 import com.google.android.gms.common.images.WebImage;
+import com.iptv.player.cast.CustomVolleyRequest;
+import com.iptv.player.cast.ExpandedControlsActivity;
 import com.iptv.player.components.Component;
+import com.iptv.player.data.model.VideoItem;
 import com.iptv.player.eventTypes.ScreenEvent;
 import com.iptv.player.eventTypes.ScreenStateEvent;
 import com.iptv.player.eventTypes.UserInteraction;
@@ -46,11 +54,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.mediarouter.app.MediaRouteButton;
+import androidx.mediarouter.media.MediaRouteSelector;
+import androidx.mediarouter.media.MediaRouter;
 
 public abstract class VlcPlayerActivity extends AppCompatActivity implements
-    IVLCVout.OnNewVideoLayoutListener,
-    MediaPlayer.EventListener,
-    ConnectionClassManager.ConnectionClassStateChangeListener {
+        IVLCVout.OnNewVideoLayoutListener,
+        MediaPlayer.EventListener,
+        ConnectionClassManager.ConnectionClassStateChangeListener {
 
     private static final String TAG = "VlcPlayerActivity";
     private static final boolean USE_SURFACE_VIEW = true;
@@ -83,33 +93,34 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
     private ConstraintLayout componentContainer;
     List<Component> components;
     private boolean isOnKeyDownConsumed = true;
-    private CastContext mCastContext;
-    private PlaybackLocation mLocation;
-
-    public enum PlaybackLocation {
-        LOCAL,
-        REMOTE
-    }
+    NetworkImageView videoImage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_vlc_player);
 
-
+        startSearchForDevicesAndCast();
         setupCastListener();
         mCastContext = CastContext.getSharedInstance(this);
         mCastSession = mCastContext.getSessionManager().getCurrentCastSession();
 
-        MediaRouteButton mediaRouteButton = findViewById(R.id.mediaRouteButton);
-        CastButtonFactory.setUpMediaRouteButton(getApplicationContext(), mediaRouteButton);
+
+//        try {
+//            CastManager.initCastManager(this, NAMESPACE);
+//        } catch (CastManager.CastManagerInitializationException e) {
+//            e.printStackTrace();
+//        }
+//        RemoteDeviceConnector.initRemoteDeviceConnector(this, getResources().getString(R.string.app_id));
+
+        videoImage = findViewById(R.id.videoImage);
 
 
         viewModel = ViewModelProviders.of(this).get(VlcPlayerViewModel.class);
 
         componentContainer = findViewById(R.id.view_container);
         componentContainer.setOnClickListener(
-            v -> viewModel.setScreenStateEvent(new ScreenEvent(ScreenStateEvent.ON_SCREEN_TOUCH)));
+                v -> viewModel.setScreenStateEvent(new ScreenEvent(ScreenStateEvent.ON_SCREEN_TOUCH)));
 
         viewModel.getUserInteractionEvents().observe(this, this::onUserInteraction);
 
@@ -132,9 +143,7 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
                 mSubtitlesSurface.getHolder().setFormat(PixelFormat.TRANSLUCENT);
             }
             mVideoView = mVideoSurface;
-        }
-        else
-        {
+        } else {
             ViewStub stub = findViewById(R.id.texture_stub);
             mVideoTexture = (TextureView) stub.inflate();
             mVideoView = mVideoTexture;
@@ -160,10 +169,10 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
     @Override
     protected void onDestroy() {
         Log.e("onDestroy", String.valueOf(mMediaPlayer.getTime()));
-        long i  = 0;
-        if(mMediaPlayer.getLength()!= mMediaPlayer.getTime())
+        long i = 0;
+        if (mMediaPlayer.getLength() != mMediaPlayer.getTime())
             i = mMediaPlayer.getTime();
-        pausedIn((int)i);
+        pausedIn((int) i);
         mMediaPlayer.release();
         mLibVLC.release();
         mDeviceBandwidthSampler.stopSampling();
@@ -175,14 +184,12 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
         super.onStart();
 
 
-
         final IVLCVout vlcVout = mMediaPlayer.getVLCVout();
         if (mVideoSurface != null) {
             vlcVout.setVideoView(mVideoSurface);
             if (mSubtitlesSurface != null)
                 vlcVout.setSubtitlesView(mSubtitlesSurface);
-        }
-        else {
+        } else {
             vlcVout.setVideoView(mVideoTexture);
         }
         vlcVout.attachViews(this);
@@ -212,7 +219,7 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
             mVideoSurfaceFrame.removeOnLayoutChangeListener(mOnLayoutChangeListener);
             mOnLayoutChangeListener = null;
         }
-
+        isPlaying = mMediaPlayer.isPlaying();
         mMediaPlayer.pause();
 
         mMediaPlayer.getVLCVout().detachViews();
@@ -221,7 +228,7 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
 
         super.onStop();
     }
-
+    Boolean isPlaying = false;
     @Override
     protected void onResume() {
         mCastContext.getSessionManager().addSessionManagerListener(
@@ -233,11 +240,12 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
         }
         super.onResume();
 
-        if(mMediaPlayer!=null){
+        if (mMediaPlayer != null) {
 //            if(!mMediaPlayer.isPlaying())
             mVideoSurfaceFrame.addOnLayoutChangeListener(mOnLayoutChangeListener);
 
             mConnectionClassManager.register(this);
+            if(isPlaying)
             mMediaPlayer.play();
 
         }
@@ -256,7 +264,7 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
                 if (vtrack == null)
                     return;
                 final boolean videoSwapped = vtrack.orientation == Media.VideoTrack.Orientation.LeftBottom
-                    || vtrack.orientation == Media.VideoTrack.Orientation.RightTop;
+                        || vtrack.orientation == Media.VideoTrack.Orientation.RightTop;
                 if (CURRENT_SIZE == SurfaceSize.SURFACE_FIT_SCREEN) {
                     int videoW = vtrack.width;
                     int videoH = vtrack.height;
@@ -281,8 +289,8 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
                     mMediaPlayer.setAspectRatio(null);
                 } else {
                     mMediaPlayer.setScale(0);
-                    mMediaPlayer.setAspectRatio(!videoSwapped ? ""+displayW+":"+displayH
-                        : ""+displayH+":"+displayW);
+                    mMediaPlayer.setAspectRatio(!videoSwapped ? "" + displayW + ":" + displayH
+                            : "" + displayH + ":" + displayW);
                 }
                 break;
             }
@@ -316,11 +324,11 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
         ViewGroup.LayoutParams lp = mVideoView.getLayoutParams();
         if (mVideoWidth * mVideoHeight == 0) {
             /* Case of OpenGL vouts: handles the placement of the video using MediaPlayer API */
-            lp.width  = ViewGroup.LayoutParams.MATCH_PARENT;
+            lp.width = ViewGroup.LayoutParams.MATCH_PARENT;
             lp.height = ViewGroup.LayoutParams.MATCH_PARENT;
             mVideoView.setLayoutParams(lp);
             lp = mVideoSurfaceFrame.getLayoutParams();
-            lp.width  = ViewGroup.LayoutParams.MATCH_PARENT;
+            lp.width = ViewGroup.LayoutParams.MATCH_PARENT;
             lp.height = ViewGroup.LayoutParams.MATCH_PARENT;
             mVideoSurfaceFrame.setLayoutParams(lp);
             changeMediaPlayerLayout(sw, sh);
@@ -346,10 +354,10 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
         if (mVideoSarDen == mVideoSarNum) {
             /* No indication about the density, assuming 1:1 */
             vw = mVideoVisibleWidth;
-            ar = (double)mVideoVisibleWidth / (double)mVideoVisibleHeight;
+            ar = (double) mVideoVisibleWidth / (double) mVideoVisibleHeight;
         } else {
             /* Use the specified aspect ratio */
-            vw = mVideoVisibleWidth * (double)mVideoSarNum / mVideoSarDen;
+            vw = mVideoVisibleWidth * (double) mVideoSarNum / mVideoSarDen;
             ar = vw / mVideoVisibleHeight;
         }
 
@@ -392,7 +400,7 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
         }
 
         // set display size
-        lp.width  = (int) Math.ceil(dw * mVideoWidth / mVideoVisibleWidth);
+        lp.width = (int) Math.ceil(dw * mVideoWidth / mVideoVisibleWidth);
         lp.height = (int) Math.ceil(dh * mVideoHeight / mVideoVisibleHeight);
         mVideoView.setLayoutParams(lp);
         if (mSubtitlesSurface != null)
@@ -433,24 +441,25 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
     private void hideSystemUI() {
         View decorView = getWindow().getDecorView();
         decorView.setSystemUiVisibility(
-            View.SYSTEM_UI_FLAG_LOW_PROFILE
-                | View.SYSTEM_UI_FLAG_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+                View.SYSTEM_UI_FLAG_LOW_PROFILE
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
     }
 
     private void showSystemUI() {
         View decorView = getWindow().getDecorView();
         decorView.setSystemUiVisibility(
-            View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
     }
 
     public abstract List<Component> getComponents();
-    public abstract void  pausedIn(int i);
+
+    public abstract void pausedIn(int i);
 
     public static void setScreenSize(SurfaceSize size) {
         CURRENT_SIZE = size;
@@ -461,7 +470,9 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
         mMediaPlayer.setMedia(media);
         media.release();
     }
-private String url = "";
+
+    private String url = "";
+
     public void setAndPlay(String url) {
         this.url = url;
         final Media media = new Media(mLibVLC, Uri.parse(url));
@@ -469,6 +480,29 @@ private String url = "";
         media.release();
 
         play();
+    }
+    VideoItem videoItem;
+    public void setAndPlay(VideoItem videoItem) {
+        viewModel.setScreenStateEvent(new ScreenEvent(videoItem.getTitle(), videoItem.getImageUrl()));
+        this.url = videoItem.getUrl();
+        this.videoItem = videoItem;
+        loadVideoImage();
+        final Media media = new Media(mLibVLC, Uri.parse(url));
+        mMediaPlayer.setMedia(media);
+        media.release();
+        if (mCastSession != null && mCastSession.isConnected()) {
+            loadRemoteMedia(0, true);
+        }else {
+
+            play();
+        }
+    }
+
+    private void loadVideoImage() {
+        ImageLoader mImageLoader = CustomVolleyRequest.getInstance(getApplicationContext())
+                .getImageLoader();
+        mImageLoader.get(videoItem.getImageUrl(), ImageLoader.getImageListener(videoImage, 0, 0));
+        videoImage.setImageUrl(videoItem.getImageUrl(), mImageLoader);
     }
 
     public void play() {
@@ -513,6 +547,7 @@ private String url = "";
                 break;
             case MediaPlayer.Event.Playing:
                 mPlaybackState = PlaybackState.PLAYING;
+                videoImage.setVisibility(View.GONE);
                 viewModel.setScreenStateEvent(new ScreenEvent(ScreenStateEvent.PLAYING));
                 break;
             case MediaPlayer.Event.Paused:
@@ -522,9 +557,9 @@ private String url = "";
             case MediaPlayer.Event.Stopped:
                 mPlaybackState = PlaybackState.IDLE;
                 long i = 0;
-                if(event.getTimeChanged()!=event.getLengthChanged())
+                if (event.getTimeChanged() != event.getLengthChanged())
                     i = event.getTimeChanged();
-                pausedIn((int)i);
+                pausedIn((int) i);
                 viewModel.setScreenStateEvent(new ScreenEvent(ScreenStateEvent.STOPPED));
                 break;
             case MediaPlayer.Event.LengthChanged:
@@ -542,6 +577,7 @@ private String url = "";
     }
 
     long resumeTime = 0;
+
     private void onUserInteraction(UserInteraction userInteraction) {
         switch (userInteraction.getEvent()) {
             case PLAY_MEDIA:
@@ -597,6 +633,43 @@ private String url = "";
     }
 
     // adding cast
+
+    private final String NAMESPACE = "urn:x-cast:ooyala";
+    private final String APP_ID = "4172C76F";
+
+    private CastContext mCastContext;
+    private PlaybackLocation mLocation;
+
+    public enum PlaybackLocation {
+        LOCAL,
+        REMOTE
+    }
+
+    private void startSearchForDevicesAndCast() {
+        MediaRouter router = MediaRouter.getInstance(this);
+
+        int count = router.getRoutes().size();
+
+        List<MediaRouter.RouteInfo> j = router.getRoutes();
+        MediaRouteSelector selector = new MediaRouteSelector.Builder().addControlCategory(
+                CastMediaControlIntent.categoryForCast(getString(R.string.app_id))).build();
+
+        router.addCallback(selector, new MediaRouter.Callback() {
+            public int mRouteCount = 0;
+
+            @Override
+            public void onRouteChanged(MediaRouter router, MediaRouter.RouteInfo route) {
+                super.onRouteChanged(router, route);
+                int count = router.getRoutes().size();
+                if (count > 0) {
+                    viewModel.setScreenStateEvent(new ScreenEvent(ScreenStateEvent.SHOW_CAST_BTN));
+                } else
+                    viewModel.setScreenStateEvent(new ScreenEvent(ScreenStateEvent.HIDE_CAST_BTN));
+            }
+
+        }, MediaRouter.CALLBACK_FLAG_PERFORM_ACTIVE_SCAN);
+    }
+
     private CastSession mCastSession;
     private SessionManagerListener<CastSession> mSessionManagerListener;
 
@@ -606,49 +679,65 @@ private String url = "";
             @Override
             public void onSessionEnded(CastSession session, int error) {
                 onApplicationDisconnected();
+                Log.e("ahmed2", "onSessionEnded");
             }
 
             @Override
             public void onSessionResumed(CastSession session, boolean wasSuspended) {
                 onApplicationConnected(session);
+                Log.e("ahmed2", "onSessionResumed");
             }
 
             @Override
             public void onSessionResumeFailed(CastSession session, int error) {
                 onApplicationDisconnected();
+                Log.e("ahmed2", "onSessionResumeFailed");
             }
 
             @Override
             public void onSessionStarted(CastSession session, String sessionId) {
                 onApplicationConnected(session);
+                Log.e("ahmed2", "onSessionStarting");
             }
 
             @Override
             public void onSessionStartFailed(CastSession session, int error) {
                 onApplicationDisconnected();
+                Log.e("ahmed2", "onSessionStarting");
             }
 
             @Override
-            public void onSessionStarting(CastSession session) {}
+            public void onSessionStarting(CastSession session) {
+                Log.e("ahmed2", "onSessionStarting");
+            }
 
             @Override
-            public void onSessionEnding(CastSession session) {}
+            public void onSessionEnding(CastSession session) {
+                Log.e("ahmed2", "onSessionEnding");
+            }
 
             @Override
-            public void onSessionResuming(CastSession session, String sessionId) {}
+            public void onSessionResuming(CastSession session, String sessionId) {
+                Log.e("ahmed2", "onSessionResuming");
+                onApplicationConnected(session);
+            }
 
             @Override
-            public void onSessionSuspended(CastSession session, int reason) {}
+            public void onSessionSuspended(CastSession session, int reason) {
+                Log.e("ahmed2", "onSessionSuspended");
+            }
 
             private void onApplicationConnected(CastSession castSession) {
                 mCastSession = castSession;
                 if (null != mMediaPlayer) {
 
 //                    if (mMediaPlayer.getPlayerState() == MediaPlayer.Event.Playing) {
-                        Log.e("ahmed","Ok1");
-                        mMediaPlayer.pause();
-                        loadRemoteMedia((int)mMediaPlayer.getTime(), true);
-                        return;
+                    Log.e("ahmed", "Ok1");
+                    mMediaPlayer.pause();
+                    loadRemoteMedia((int) mMediaPlayer.getTime(), true);
+
+                    videoImage.setVisibility(View.VISIBLE);
+                    return;
 //                    } else {
 //                        Log.e("ahmed","Ok2");
 //                        mPlaybackState = PlaybackState.IDLE;
@@ -664,11 +753,17 @@ private String url = "";
                 mPlaybackState = PlaybackState.IDLE;
                 mLocation = PlaybackLocation.LOCAL;
 //                updatePlayButton(mPlaybackState);
-                supportInvalidateOptionsMenu();
+//                supportInvalidateOptionsMenu();
             }
         };
     }
+    Handler handler = new Handler();
 
+    private Runnable updateData = new Runnable(){
+        public void run(){
+            finish();
+        }
+    };
     private void updatePlaybackLocation(PlaybackLocation location) {
         mLocation = location;
 //        if (location == PlaybackLocation.LOCAL) {
@@ -689,15 +784,18 @@ private String url = "";
 
 
     private PlaybackState mPlaybackState;
+
     public enum PlaybackState {
         PLAYING, PAUSED, BUFFERING, IDLE
     }
+
     @Override
     protected void onPause() {
         super.onPause();
         mCastContext.getSessionManager().removeSessionManagerListener(
                 mSessionManagerListener, CastSession.class);
     }
+
     private void loadRemoteMedia(int position, boolean autoPlay) {
         if (mCastSession == null) {
             return;
@@ -706,25 +804,37 @@ private String url = "";
         if (remoteMediaClient == null) {
             return;
         }
+        remoteMediaClient.registerCallback(new RemoteMediaClient.Callback() {
+            @Override
+            public void onStatusUpdated() {
+                Intent intent = new Intent(VlcPlayerActivity.this, ExpandedControlsActivity.class);
+                startActivity(intent);
+                remoteMediaClient.unregisterCallback(this);
+            }
+        });
         remoteMediaClient.load(new MediaLoadRequestData.Builder()
                 .setMediaInfo(buildMediaInfo())
                 .setAutoplay(autoPlay)
                 .setCurrentTime(position).build());
+
+        handler.postDelayed(updateData,1000);
     }
 
     private MediaInfo buildMediaInfo() {
         MediaMetadata movieMetadata = new MediaMetadata(MediaMetadata.MEDIA_TYPE_MOVIE);
 
 //        movieMetadata.putString(MediaMetadata.KEY_SUBTITLE, mSelectedMedia.getStudio());
-        movieMetadata.putString(MediaMetadata.KEY_TITLE, "testTitle");
-        movieMetadata.addImage(new WebImage(Uri.parse("https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-1.2.1&w=1000&q=80")));
-        movieMetadata.addImage(new WebImage(Uri.parse("https://i2.wp.com/mediationinyourpocket.com/wp-content/uploads/2018/10/background-calm-clouds-747964.jpg?fit=4000%2C2525&ssl=1")));
+        movieMetadata.putString(MediaMetadata.KEY_TITLE, videoItem.getTitle());
+        movieMetadata.addImage(new WebImage(Uri.parse(videoItem.getImageUrl())));
+//        movieMetadata.addImage(new WebImage(Uri.parse("https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-1.2.1&w=1000&q=80")));
 
+//        viewModel.setScreenStateEvent(new ScreenEvent(videoItem.getImageUrl()));
         return new MediaInfo.Builder(url)
                 .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
                 .setContentType("videos/mkv")
                 .setMetadata(movieMetadata)
 //                .setStreamDuration(mSelectedMedia.getDuration() * 1000)
                 .build();
+
     }
 }

@@ -7,6 +7,7 @@ public class ScreenEvent {
     private long timeChanged;
     private long lengthChanged;
     private float buffering;
+    private String title, imageUrl;
     private ConnectionQuality connectionQuality;
     private ScreenStateEvent event;
 
@@ -31,6 +32,17 @@ public class ScreenEvent {
         buffering = value;
     }
 
+    public ScreenEvent(String value) {
+        this.event = ScreenStateEvent.SET_VIDEO_IMAGE;
+        imageUrl = value;
+    }
+
+    public ScreenEvent(String title, String imageUrl) {
+        this.event = ScreenStateEvent.SET_TITLE;
+        this.title = title;
+        this.imageUrl = imageUrl;
+    }
+
     public ScreenEvent(ConnectionQuality connectionQuality) {
         this.event = ScreenStateEvent.CONNECTION_QUALITY_CHANGED;
         this.connectionQuality = connectionQuality;
@@ -50,6 +62,14 @@ public class ScreenEvent {
 
     public float getBuffering() {
         return buffering;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public String getTitle() {
+        return title;
     }
 
     public ConnectionQuality getConnectionQuality() {

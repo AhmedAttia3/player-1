@@ -1,104 +1,158 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/component_controllers"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="#CC000000"
-    android:padding="8dp"
-    android:visibility="gone"
+    android:layout_height="match_parent"
+    android:visibility="visible"
     app:layout_constraintBottom_toBottomOf="parent"
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintStart_toStartOf="parent">
 
-    <TextView
-        android:id="@+id/current_time"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="00:00"
-        android:layout_marginStart="16dp"
-        android:textColor="@android:color/white"
-        app:layout_constraintBottom_toBottomOf="@id/seek_bar"
-        app:layout_constraintTop_toTopOf="@id/seek_bar"
-        app:layout_constraintStart_toStartOf="parent" />
+    <com.android.volley.toolbox.NetworkImageView
+        android:id="@+id/videoImage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="visible"
+        android:scaleType="centerInside"/>
 
-    <SeekBar
-        android:id="@+id/seek_bar"
-        android:layout_width="0dp"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        app:layout_constraintTop_toTopOf="parent"
+        android:background="@drawable/player_bg_gradient_dark2"
+        android:padding="8dp">
+
+
+        <TextView
+            android:id="@+id/title_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            tools:text="titl  sdfasdf sdf sdfe"
+            android:textSize="20sp"
+            android:textColor="#fff"
+            android:textStyle="bold"
+            android:lines="1"
+            android:ellipsize="end"
+            android:layout_marginStart="16dp"
+            android:layout_marginBottom="4dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/mediaRouteButton"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <androidx.mediarouter.app.MediaRouteButton
+            android:id="@+id/mediaRouteButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="4dp"
+            android:visibility="gone"
+            android:textColor="@android:color/white"
+            android:background="@drawable/selectable_item_background"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@drawable/player_bg_gradient_dark"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/media_time"
-        app:layout_constraintStart_toEndOf="@id/current_time" />
+        android:padding="8dp">
 
-    <TextView
-        android:id="@+id/media_time"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="00:00"
-        android:layout_marginEnd="16dp"
-        android:textColor="@android:color/white"
-        app:layout_constraintBottom_toBottomOf="@id/seek_bar"
-        app:layout_constraintTop_toTopOf="@id/seek_bar"
-        app:layout_constraintEnd_toEndOf="parent" />
+        <TextView
+            android:id="@+id/current_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:text="00:00"
+            android:textColor="@android:color/white"
+            app:layout_constraintBottom_toBottomOf="@id/seek_bar"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/seek_bar" />
 
-    <androidx.constraintlayout.widget.Barrier
-        android:id="@+id/seek_bar_barrier"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:barrierDirection="top"
-        app:constraint_referenced_ids="current_time, seek_bar, media_time" />
+        <SeekBar
+            android:id="@+id/seek_bar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/media_time"
+            app:layout_constraintStart_toEndOf="@id/current_time" />
 
-    <ImageButton
-        android:id="@+id/minus_10"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:minWidth="0dp"
-        android:nextFocusRight="@id/play_pause"
-        app:cornerRadius="4dp"
-        android:src="@drawable/ic_fast_rewind_white"
-        app:iconPadding="0dp"
-        app:iconTint="@android:color/white"
-        app:layout_constraintBottom_toTopOf="@id/seek_bar_barrier"
-        app:layout_constraintEnd_toStartOf="@id/play_pause"
-        app:layout_constraintHorizontal_chainStyle="packed"
-        app:layout_constraintStart_toStartOf="parent"
-        app:strokeColor="@android:color/transparent"
-        android:background="@drawable/selectable_item_background"  />
+        <TextView
+            android:id="@+id/media_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:text="00:00"
+            android:textColor="@android:color/white"
+            app:layout_constraintBottom_toBottomOf="@id/seek_bar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/seek_bar" />
 
-    <ImageButton
-        android:id="@+id/play_pause"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-        android:minWidth="0dp"
-        android:nextFocusLeft="@id/minus_10"
-        android:nextFocusRight="@id/plus_10"
-        app:cornerRadius="4dp"
-        android:src="@drawable/ic_play_arrow_white"
-        app:iconPadding="0dp"
-        app:iconTint="@android:color/white"
-        app:layout_constraintBottom_toTopOf="@id/seek_bar_barrier"
-        app:layout_constraintEnd_toStartOf="@id/plus_10"
-        app:layout_constraintStart_toEndOf="@id/minus_10"
-        app:strokeColor="@android:color/transparent"
-        android:background="@drawable/selectable_item_background" />
-    <ImageButton
-        android:id="@+id/plus_10"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-        android:minWidth="0dp"
-        android:nextFocusLeft="@id/play_pause"
-        app:cornerRadius="4dp"
-        android:src="@drawable/ic_fast_forward_white"
-        app:iconPadding="0dp"
-        app:iconTint="@android:color/white"
-        app:layout_constraintBottom_toTopOf="@id/seek_bar_barrier"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/play_pause"
-        app:strokeColor="@android:color/transparent"
-        android:background="@drawable/selectable_item_background"  />
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/seek_bar_barrier"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:barrierDirection="top"
+            app:constraint_referenced_ids="current_time, seek_bar, media_time" />
+
+        <ImageButton
+            android:id="@+id/minus_10"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/selectable_item_background"
+            android:minWidth="0dp"
+            android:nextFocusRight="@id/play_pause"
+            android:src="@drawable/ic_fast_rewind_white"
+            app:cornerRadius="4dp"
+            app:iconPadding="0dp"
+            app:iconTint="@android:color/white"
+            app:layout_constraintBottom_toTopOf="@id/seek_bar_barrier"
+            app:layout_constraintEnd_toStartOf="@id/play_pause"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            app:layout_constraintStart_toStartOf="parent"
+            app:strokeColor="@android:color/transparent" />
+
+        <ImageButton
+            android:id="@+id/play_pause"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/selectable_item_background"
+            android:minWidth="0dp"
+            android:nextFocusLeft="@id/minus_10"
+            android:nextFocusRight="@id/plus_10"
+            android:src="@drawable/ic_play_arrow_white"
+            app:cornerRadius="4dp"
+            app:iconPadding="0dp"
+            app:iconTint="@android:color/white"
+            app:layout_constraintBottom_toTopOf="@id/seek_bar_barrier"
+            app:layout_constraintEnd_toStartOf="@id/plus_10"
+            app:layout_constraintStart_toEndOf="@id/minus_10"
+            app:strokeColor="@android:color/transparent" />
+
+        <ImageButton
+            android:id="@+id/plus_10"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/selectable_item_background"
+            android:minWidth="0dp"
+            android:nextFocusLeft="@id/play_pause"
+            android:src="@drawable/ic_fast_forward_white"
+            app:cornerRadius="4dp"
+            app:iconPadding="0dp"
+            app:iconTint="@android:color/white"
+            app:layout_constraintBottom_toTopOf="@id/seek_bar_barrier"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/play_pause"
+            app:strokeColor="@android:color/transparent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

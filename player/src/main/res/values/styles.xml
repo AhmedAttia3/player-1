@@ -8,4 +8,8 @@
     </style>
     <style name="ExoMediaButton.Play">
         <item name="android:src">@drawable/ic_play_arrow_white</item></style>
+
+    <style name="Theme.CastVideosDark" parent="Theme.AppCompat.NoActionBar">
+        <item name="colorPrimaryDark">#000</item>
+    </style>
 </resources>

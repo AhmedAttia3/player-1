@@ -4,11 +4,16 @@ import android.os.Handler;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.NetworkImageView;
+import com.google.android.gms.cast.framework.CastButtonFactory;
 import com.google.android.material.button.MaterialButton;
 import com.iptv.player.R;
+import com.iptv.player.cast.CustomVolleyRequest;
 import com.iptv.player.eventTypes.UserInteraction;
 import com.iptv.player.eventTypes.UserInteractionEvent;
 import com.iptv.player.components.UIView;
@@ -18,6 +23,7 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
+import androidx.mediarouter.app.MediaRouteButton;
 
 public class ControllersView extends UIView implements View.OnClickListener {
 
@@ -31,12 +37,22 @@ public class ControllersView extends UIView implements View.OnClickListener {
     private TextView currentTime;
     private TextView mediaTime;
     private SeekBar seekBar;
-
+    MediaRouteButton mediaRouteButton;
     private final Handler handler = new Handler();
     private final Runnable hideRunnable = this::hide;
-
+    NetworkImageView videoImage;
+    ImageLoader mImageLoader;
+    TextView title_text;
     public ControllersView() {
         setLayout(R.layout.component_controllers);
+    }
+
+    @Override
+    public void setParent(@NonNull ViewGroup parent) {
+        super.setParent(parent);
+        mImageLoader = CustomVolleyRequest.getInstance(parent.getContext())
+                .getImageLoader();
+        CastButtonFactory.setUpMediaRouteButton(parent.getContext(), mediaRouteButton);
     }
 
     @Override
@@ -47,6 +63,10 @@ public class ControllersView extends UIView implements View.OnClickListener {
         Objects.requireNonNull(plus10).setOnClickListener(this);
         playPause = findViewById(R.id.play_pause);
         Objects.requireNonNull(playPause).setOnClickListener(this);
+
+        mediaRouteButton = findViewById(R.id.mediaRouteButton);
+        videoImage = findViewById(R.id.videoImage);
+        title_text = findViewById(R.id.title_text);
 
         currentTime = findViewById(R.id.current_time);
         mediaTime = findViewById(R.id.media_time);
@@ -89,8 +109,11 @@ public class ControllersView extends UIView implements View.OnClickListener {
         if (!isShowing()) {
             playPause.requestFocus();
         }
-        super.toggle();
-        startAutoHide();
+//        if(isPlaying){
+
+            super.toggle();
+            startAutoHide();
+//        }
     }
 
     @Override
@@ -106,6 +129,7 @@ public class ControllersView extends UIView implements View.OnClickListener {
     }
 
     public void startAutoHide() {
+
         handler.removeCallbacks(hideRunnable);
         handler.postDelayed(hideRunnable, 5000);
     }
@@ -148,6 +172,33 @@ public class ControllersView extends UIView implements View.OnClickListener {
     public void end() {
         isPlaying = false;
         playPause.setImageResource(R.drawable.ic_play_arrow_white);
+    }
+
+    public void showCastBtn(){
+        mediaRouteButton.setVisibility(View.VISIBLE);
+    }
+
+    public void hideCastBtn(){
+        mediaRouteButton.setVisibility(View.GONE);
+    }
+
+
+    public void showVideoImage(){
+        videoImage.setVisibility(View.VISIBLE);
+    }
+
+    public void hideVideoImage(){
+        videoImage.setVisibility(View.GONE);
+    }
+
+    public void setVideoImage(String url){
+        mImageLoader.get(url, ImageLoader.getImageListener(videoImage, 0, 0));
+        videoImage.setImageUrl(url, mImageLoader);
+        showVideoImage();
+    }
+
+    public void setTitle_text(String value){
+        title_text.setText(value);
     }
 
     void updateTime(long value) {

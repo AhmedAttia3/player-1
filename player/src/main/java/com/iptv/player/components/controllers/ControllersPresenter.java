@@ -34,6 +34,7 @@ public class ControllersPresenter extends Presenter<ControllersView> {
                 uiView.end();
                 break;
             case ON_SCREEN_TOUCH:
+//                if(isPlaying)
                 uiView.toggle();
                 break;
             case LENGTH_CHANGED:
@@ -42,6 +43,15 @@ public class ControllersPresenter extends Presenter<ControllersView> {
             case TIME_CHANGED:
                 uiView.updateTime(screenEvent.getTimeChanged());
                 break;
+            case SHOW_CAST_BTN:
+                uiView.showCastBtn();
+                break;
+            case HIDE_CAST_BTN:
+                uiView.hideCastBtn();
+            case SET_VIDEO_IMAGE:
+                uiView.setVideoImage(screenEvent.getImageUrl());
+            case SET_TITLE:
+                uiView.setTitle_text(screenEvent.getTitle());
         }
     }
 
@@ -55,15 +65,16 @@ public class ControllersPresenter extends Presenter<ControllersView> {
                 case KeyEvent.KEYCODE_DPAD_LEFT:
                     if (isPlaying) {
                         if (!uiView.isShowing()) {
-                            uiView.show();
+//                            uiView.show();
                             return true;
                         } else {
-                            uiView.startAutoHide();
+//                            uiView.startAutoHide();
                         }
                     }
                     break;
                 case KeyEvent.KEYCODE_BACK:
                     if (uiView.isShowing()) {
+//                        if(isPlaying)
                         uiView.hide();
                         return true;
                     }

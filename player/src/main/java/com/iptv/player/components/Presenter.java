@@ -37,6 +37,7 @@ public abstract class Presenter<T extends UIView> extends ViewModel {
 
     @Override
     protected void onCleared() {
+        if(screenStateEvent!=null)
         screenStateEvent.removeObserver(this::onScreenEvent);
         super.onCleared();
     }
