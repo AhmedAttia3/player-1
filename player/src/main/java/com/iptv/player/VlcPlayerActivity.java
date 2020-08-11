@@ -672,7 +672,11 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
 
     @Override
     public void onBandwidthStateChange(ConnectionQuality bandwidthState) {
-        runOnUiThread(() -> viewModel.postScreenStateEvent(new ScreenEvent(bandwidthState)));
+        runOnUiThread(() ->{
+                    double speedAverage = mConnectionClassManager.getDownloadKBitsPerSecond();
+                    viewModel.postScreenStateEvent(new ScreenEvent(bandwidthState,(int)speedAverage+" kbps"));
+                }
+                );
     }
 
     // adding cast

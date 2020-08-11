@@ -16,7 +16,7 @@ public class SignalStrengthPresenter extends Presenter<SignalStrengthView> {
     public void onScreenEvent(ScreenEvent screenEvent) {
         switch (screenEvent.getEvent()) {
             case CONNECTION_QUALITY_CHANGED:
-                uiView.updateView(screenEvent.getConnectionQuality());
+                uiView.updateView(screenEvent.getConnectionQuality(), screenEvent.getBitrate());
                 break;
         }
     }

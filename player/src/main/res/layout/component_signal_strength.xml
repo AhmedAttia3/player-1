@@ -13,4 +13,5 @@
     android:layout_marginEnd="16dp"
     app:chipIcon="@drawable/ic_signal_defalt"
     app:layout_constraintBottom_toBottomOf="parent"
+    android:theme="@style/Theme.MaterialComponents.Light"
     app:layout_constraintEnd_toEndOf="parent"/>

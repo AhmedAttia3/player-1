@@ -7,7 +7,7 @@ public class ScreenEvent {
     private long timeChanged;
     private long lengthChanged;
     private float buffering;
-    private String title, imageUrl;
+    private String title, imageUrl, bitrate;
     private ConnectionQuality connectionQuality;
     private ScreenStateEvent event;
 
@@ -43,8 +43,9 @@ public class ScreenEvent {
         this.imageUrl = imageUrl;
     }
 
-    public ScreenEvent(ConnectionQuality connectionQuality) {
+    public ScreenEvent(ConnectionQuality connectionQuality, String bitrate) {
         this.event = ScreenStateEvent.CONNECTION_QUALITY_CHANGED;
+        this.bitrate = bitrate;
         this.connectionQuality = connectionQuality;
     }
 
@@ -74,5 +75,9 @@ public class ScreenEvent {
 
     public ConnectionQuality getConnectionQuality() {
         return connectionQuality;
+    }
+
+    public String getBitrate() {
+        return bitrate;
     }
 }

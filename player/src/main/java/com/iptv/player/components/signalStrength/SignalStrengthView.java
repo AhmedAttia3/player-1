@@ -47,7 +47,8 @@ public class SignalStrengthView extends UIView {
         return LOCK_TAG;
     }
 
-    public void updateView(ConnectionQuality quality) {
+    public void updateView(ConnectionQuality quality, String bitrate) {
+        connectionChip.setText(bitrate);
         switch (quality) {
             default:
             case UNKNOWN:
@@ -58,25 +59,25 @@ public class SignalStrengthView extends UIView {
                 break;
             case POOR:
                 connectionChip.setChipIconResource(R.drawable.ic_signal_poor);
-                connectionChip.setText(quality.name());
+//                connectionChip.setText(quality.name());
                 connectionChip.setTextColor(ContextCompat.getColor(connectionChip.getContext(), R.color.network_poor_color));
                 show();
                 break;
             case MODERATE:
                 connectionChip.setChipIconResource(R.drawable.ic_signal_moderate);
-                connectionChip.setText(quality.name());
+//                connectionChip.setText(quality.name());
                 connectionChip.setTextColor(ContextCompat.getColor(connectionChip.getContext(), R.color.network_moderate_color));
                 show();
                 break;
             case GOOD:
                 connectionChip.setChipIconResource(R.drawable.ic_signal_good);
-                connectionChip.setText(quality.name());
+//                connectionChip.setText(quality.name());
                 connectionChip.setTextColor(ContextCompat.getColor(connectionChip.getContext(), R.color.network_good_color));
                 show();
                 break;
             case EXCELLENT:
                 connectionChip.setChipIconResource(R.drawable.ic_signal_excellent);
-                connectionChip.setText(quality.name());
+//                connectionChip.setText(quality.name());
                 connectionChip.setTextColor(ContextCompat.getColor(connectionChip.getContext(), R.color.network_excellent_color));
                 show();
                 break;
