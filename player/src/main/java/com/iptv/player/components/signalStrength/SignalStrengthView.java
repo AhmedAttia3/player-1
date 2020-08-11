@@ -1,15 +1,14 @@
 package com.iptv.player.components.signalStrength;
 
 import android.os.Handler;
-import android.view.ViewGroup;
+import android.util.Log;
+
+import androidx.core.content.ContextCompat;
 
 import com.facebook.network.connectionclass.ConnectionQuality;
 import com.google.android.material.chip.Chip;
 import com.iptv.player.R;
 import com.iptv.player.components.UIView;
-
-import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
 
 public class SignalStrengthView extends UIView {
 
@@ -49,6 +48,7 @@ public class SignalStrengthView extends UIView {
 
     public void updateView(ConnectionQuality quality, String bitrate) {
         connectionChip.setText(bitrate);
+        Log.i("ConnectionI", bitrate);
         switch (quality) {
             default:
             case UNKNOWN:
