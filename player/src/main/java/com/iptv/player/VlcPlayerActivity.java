@@ -18,6 +18,12 @@ import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.widget.FrameLayout;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.lifecycle.ViewModelProviders;
+import androidx.mediarouter.media.MediaRouteSelector;
+import androidx.mediarouter.media.MediaRouter;
+
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.NetworkImageView;
 import com.facebook.network.connectionclass.ConnectionClassManager;
@@ -27,12 +33,10 @@ import com.google.android.gms.cast.CastMediaControlIntent;
 import com.google.android.gms.cast.MediaInfo;
 import com.google.android.gms.cast.MediaLoadRequestData;
 import com.google.android.gms.cast.MediaMetadata;
-import com.google.android.gms.cast.framework.CastButtonFactory;
 import com.google.android.gms.cast.framework.CastContext;
 import com.google.android.gms.cast.framework.CastSession;
 import com.google.android.gms.cast.framework.SessionManagerListener;
 import com.google.android.gms.cast.framework.media.RemoteMediaClient;
-import com.google.android.gms.cast.framework.media.widget.ExpandedControllerActivity;
 import com.google.android.gms.common.images.WebImage;
 import com.iptv.player.cast.CustomVolleyRequest;
 import com.iptv.player.cast.ExpandedControlsActivity;
@@ -49,13 +53,6 @@ import org.videolan.libvlc.MediaPlayer;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.lifecycle.ViewModelProviders;
-import androidx.mediarouter.app.MediaRouteButton;
-import androidx.mediarouter.media.MediaRouteSelector;
-import androidx.mediarouter.media.MediaRouter;
 
 public abstract class VlcPlayerActivity extends AppCompatActivity implements
         IVLCVout.OnNewVideoLayoutListener,
@@ -172,7 +169,7 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
         long i = 0;
         if (mMediaPlayer.getLength() != mMediaPlayer.getTime())
             i = mMediaPlayer.getTime();
-        pausedIn((int) i);
+        pausedIn((int) i, selected);
         mMediaPlayer.release();
         mLibVLC.release();
         mDeviceBandwidthSampler.stopSampling();
@@ -215,16 +212,6 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
 
     @Override
     protected void onStop() {
-        if (mOnLayoutChangeListener != null) {
-            mVideoSurfaceFrame.removeOnLayoutChangeListener(mOnLayoutChangeListener);
-            mOnLayoutChangeListener = null;
-        }
-        isPlaying = mMediaPlayer.isPlaying();
-        mMediaPlayer.pause();
-
-        mMediaPlayer.getVLCVout().detachViews();
-
-        mConnectionClassManager.remove(this);
 
         super.onStop();
     }
@@ -245,6 +232,7 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
             mVideoSurfaceFrame.addOnLayoutChangeListener(mOnLayoutChangeListener);
 
             mConnectionClassManager.register(this);
+            Log.e("onResumeIsPlaying", String.valueOf(isPlaying));
             if(isPlaying)
             mMediaPlayer.play();
 
@@ -459,7 +447,7 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
 
     public abstract List<Component> getComponents();
 
-    public abstract void pausedIn(int i);
+    public abstract void pausedIn(int time, int episodeIndex);
 
     public static void setScreenSize(SurfaceSize size) {
         CURRENT_SIZE = size;
@@ -471,30 +459,52 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
         media.release();
     }
 
-    private String url = "";
 
-    public void setAndPlay(String url) {
-        this.url = url;
-        final Media media = new Media(mLibVLC, Uri.parse(url));
-        mMediaPlayer.setMedia(media);
-        media.release();
-
-        play();
-    }
     VideoItem videoItem;
     public void setAndPlay(VideoItem videoItem) {
         viewModel.setScreenStateEvent(new ScreenEvent(videoItem.getTitle(), videoItem.getImageUrl()));
-        this.url = videoItem.getUrl();
         this.videoItem = videoItem;
         loadVideoImage();
-        final Media media = new Media(mLibVLC, Uri.parse(url));
+        final Media media = new Media(mLibVLC, Uri.parse(videoItem.getUrl()));
         mMediaPlayer.setMedia(media);
+        media.release();
+        if (mCastSession != null && mCastSession.isConnected()) {
+            loadRemoteMedia((int)resumeTime, true);
+        }else {
+            Log.e("PlayingA", "test");
+            play();
+        }
+    }
+
+    private static ArrayList<VideoItem> videoItems =new ArrayList<>();
+    int selected = 0;
+    public void setAndPlay(ArrayList<VideoItem> episods, int selected) {
+        viewModel.setScreenStateEvent(new ScreenEvent(ScreenStateEvent.PLAYLIST));
+        videoItems.clear();
+        videoItems.addAll(episods);
+        videoItem = videoItems.get(selected);
+        viewModel.setScreenStateEvent(new ScreenEvent(videoItem.getTitle(), videoItem.getImageUrl()));
+        this.selected = selected;
+
+        final Media media = new Media(mLibVLC, Uri.parse(videoItems.get(selected).getUrl()));
+        mMediaPlayer.setMedia(media);
+        startOrEndList();
         media.release();
         if (mCastSession != null && mCastSession.isConnected()) {
             loadRemoteMedia((int)resumeTime, true);
         }else {
 
             play();
+        }
+    }
+
+    private void startOrEndList() {
+        if(selected==videoItems.size()-1){
+            viewModel.setScreenStateEvent(new ScreenEvent(ScreenStateEvent.END_LIST));
+        }else if(selected == 0){
+            viewModel.setScreenStateEvent(new ScreenEvent(ScreenStateEvent.START_LIST));
+        }else {
+            viewModel.setScreenStateEvent(new ScreenEvent(ScreenStateEvent.PLAYLIST));
         }
     }
 
@@ -559,8 +569,12 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
                 long i = 0;
                 if (event.getTimeChanged() != event.getLengthChanged())
                     i = event.getTimeChanged();
-                pausedIn((int) i);
+                resumeTime = i;
+                pausedIn((int) i, selected);
                 viewModel.setScreenStateEvent(new ScreenEvent(ScreenStateEvent.STOPPED));
+                if(videoItems.size()>0){
+                    next();
+                }
                 break;
             case MediaPlayer.Event.LengthChanged:
                 mMediaPlayer.setTime(resumeTime);
@@ -581,7 +595,7 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
     private void onUserInteraction(UserInteraction userInteraction) {
         switch (userInteraction.getEvent()) {
             case PLAY_MEDIA:
-                setAndPlay(userInteraction.getMediaUri());
+//                setAndPlay(userInteraction.getMediaUri());
                 break;
             case PLAY:
                 play();
@@ -593,8 +607,10 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
                 stop();
                 break;
             case NEXT:
+                next();
                 break;
             case PREVIOUS:
+                previous();
                 break;
             case TIME_CHANGED:
                 seekTo(userInteraction.getTimeChanged());
@@ -613,6 +629,33 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
             case CLEAR_ON_KEY_LOCK:
                 viewModel.clearOnKeyLock(userInteraction.getLockTag());
                 break;
+        }
+    }
+
+    private void next() {
+        if(videoItems.size()>selected){
+            selected++;
+            Log.e("ahmed","aaaaaaaaaaaaaaaaaaaaaaaaaaa"+selected);
+            videoItem = videoItems.get(selected);
+            viewModel.setScreenStateEvent(new ScreenEvent(videoItem.getTitle(), videoItem.getImageUrl()));
+            final Media media = new Media(mLibVLC, Uri.parse(videoItems.get(selected).getUrl()));
+            mMediaPlayer.setMedia(media);
+            media.release();
+            startOrEndList();
+            play();
+        }
+    }
+
+    private void previous() {
+        if(selected>0){
+            selected--;
+            videoItem = videoItems.get(selected);
+            viewModel.setScreenStateEvent(new ScreenEvent(videoItem.getTitle(), videoItem.getImageUrl()));
+            final Media media = new Media(mLibVLC, Uri.parse(videoItems.get(selected).getUrl()));
+            mMediaPlayer.setMedia(media);
+            media.release();
+            startOrEndList();
+            play();
         }
     }
 
@@ -788,6 +831,17 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
 
     @Override
     protected void onPause() {
+        if (mOnLayoutChangeListener != null) {
+            mVideoSurfaceFrame.removeOnLayoutChangeListener(mOnLayoutChangeListener);
+            mOnLayoutChangeListener = null;
+        }
+        isPlaying = mMediaPlayer.isPlaying();
+        Log.e("onPauseIsPlaying", String.valueOf(isPlaying));
+        mMediaPlayer.pause();
+
+        mMediaPlayer.getVLCVout().detachViews();
+
+        mConnectionClassManager.remove(this);
         super.onPause();
         mCastContext.getSessionManager().removeSessionManagerListener(
                 mSessionManagerListener, CastSession.class);
@@ -826,7 +880,7 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
 //        movieMetadata.addImage(new WebImage(Uri.parse("https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-1.2.1&w=1000&q=80")));
 
 //        viewModel.setScreenStateEvent(new ScreenEvent(videoItem.getImageUrl()));
-        return new MediaInfo.Builder(url)
+        return new MediaInfo.Builder(videoItem.getUrl())
                 .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
                 .setContentType("videos/mkv")
                 .setMetadata(movieMetadata)

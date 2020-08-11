@@ -31,6 +31,8 @@ public class ControllersView extends UIView implements View.OnClickListener {
 
     private ImageButton minus10;
     private ImageButton plus10;
+    private ImageButton next;
+    private ImageButton previous;
     private ImageButton playPause;
     private boolean isPlaying;
 
@@ -63,6 +65,13 @@ public class ControllersView extends UIView implements View.OnClickListener {
         Objects.requireNonNull(plus10).setOnClickListener(this);
         playPause = findViewById(R.id.play_pause);
         Objects.requireNonNull(playPause).setOnClickListener(this);
+        next = findViewById(R.id.next);
+        Objects.requireNonNull(next).setOnClickListener(this);
+        previous = findViewById(R.id.previous);
+        Objects.requireNonNull(previous).setOnClickListener(this);
+
+        next.setVisibility(View.GONE);
+        previous.setVisibility(View.GONE);
 
         mediaRouteButton = findViewById(R.id.mediaRouteButton);
         videoImage = findViewById(R.id.videoImage);
@@ -91,6 +100,11 @@ public class ControllersView extends UIView implements View.OnClickListener {
 
             }
         });
+    }
+
+    private void setDisabled(ImageButton next, boolean b) {
+        next.setImageAlpha(b ? 0xFF : 0x3F);
+
     }
 
     @Override
@@ -129,7 +143,6 @@ public class ControllersView extends UIView implements View.OnClickListener {
     }
 
     public void startAutoHide() {
-
         handler.removeCallbacks(hideRunnable);
         handler.postDelayed(hideRunnable, 5000);
     }
@@ -152,7 +165,45 @@ public class ControllersView extends UIView implements View.OnClickListener {
                 userInteractionEvents.setValue(new UserInteraction(UserInteractionEvent.PLAY));
             }
         }
+        else if( v.getId()==R.id.next){
+            userInteractionEvents.setValue(new UserInteraction(UserInteractionEvent.NEXT));
+        }
+        else if( v.getId()==R.id.previous){
+            userInteractionEvents.setValue(new UserInteraction(UserInteractionEvent.PREVIOUS));
+
+        }
     }
+
+    void playList() {
+        next.setVisibility(View.VISIBLE);
+        previous.setVisibility(View.VISIBLE);
+        setDisabled(next, true);
+        setDisabled(previous, true);
+        next.setEnabled(true);
+        previous.setEnabled(true);
+    }
+
+
+    void startList() {
+        setDisabled(next, true);
+        next.setEnabled(true);
+
+        setDisabled(previous, false);
+        previous.setEnabled(false);
+
+        playPause.requestFocus();
+    }
+
+
+    void endList() {
+        setDisabled(next, false);
+        next.setEnabled(false);
+
+        setDisabled(previous, true);
+        previous.setEnabled(true);
+        playPause.requestFocus();
+    }
+
 
     void play() {
         isPlaying = true;

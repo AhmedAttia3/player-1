@@ -20,6 +20,9 @@ public class ControllersPresenter extends Presenter<ControllersView> {
             case BUFFERING:
 //                controllersView.pause();
                 break;
+            case PLAYLIST:
+                uiView.playList();
+                break;
             case PLAYING:
                 isPlaying = true;
                 uiView.play();
@@ -43,6 +46,12 @@ public class ControllersPresenter extends Presenter<ControllersView> {
             case TIME_CHANGED:
                 uiView.updateTime(screenEvent.getTimeChanged());
                 break;
+            case START_LIST:
+                uiView.startList();
+                break;
+            case END_LIST:
+                uiView.endList();
+                break;
             case SHOW_CAST_BTN:
                 uiView.showCastBtn();
                 break;
@@ -65,10 +74,10 @@ public class ControllersPresenter extends Presenter<ControllersView> {
                 case KeyEvent.KEYCODE_DPAD_LEFT:
                     if (isPlaying) {
                         if (!uiView.isShowing()) {
-//                            uiView.show();
+                            uiView.show();
                             return true;
                         } else {
-//                            uiView.startAutoHide();
+                            uiView.startAutoHide();
                         }
                     }
                     break;

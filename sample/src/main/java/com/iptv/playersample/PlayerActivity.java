@@ -45,7 +45,7 @@ public class PlayerActivity extends VlcPlayerActivity {
     }
 
     @Override
-    public void pausedIn(int i) {
+    public void pausedIn(int t, int i) {
         Log.e("ahmed", String.valueOf(i));
     }
 
@@ -71,7 +71,7 @@ public class PlayerActivity extends VlcPlayerActivity {
 
         components.add(controllersViewComponent);
         components.add(loadingViewComponent);
-//        components.add(signalStrengthViewComponent);
+        components.add(signalStrengthViewComponent);
 
         return components;
     }
