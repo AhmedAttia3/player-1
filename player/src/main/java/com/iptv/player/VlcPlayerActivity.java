@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -91,16 +92,19 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
     List<Component> components;
     private boolean isOnKeyDownConsumed = true;
     NetworkImageView videoImage;
+    private Boolean isEnableCast;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_vlc_player);
 
-        startSearchForDevicesAndCast();
-        setupCastListener();
-        mCastContext = CastContext.getSharedInstance(this);
-        mCastSession = mCastContext.getSessionManager().getCurrentCastSession();
+        if (isEnableCast) {
+            startSearchForDevicesAndCast();
+            setupCastListener();
+            mCastContext = CastContext.getSharedInstance(this);
+            mCastSession = mCastContext.getSessionManager().getCurrentCastSession();
+        }
 
 
 //        try {
@@ -219,12 +223,16 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
 
     @Override
     protected void onResume() {
-        mCastContext.getSessionManager().addSessionManagerListener(
-                mSessionManagerListener, CastSession.class);
-        if (mCastSession != null && mCastSession.isConnected()) {
-            updatePlaybackLocation(PlaybackLocation.REMOTE);
-        } else {
-            updatePlaybackLocation(PlaybackLocation.LOCAL);
+
+        if (isEnableCast) {
+
+            mCastContext.getSessionManager().addSessionManagerListener(
+                    mSessionManagerListener, CastSession.class);
+            if (mCastSession != null && mCastSession.isConnected()) {
+                updatePlaybackLocation(PlaybackLocation.REMOTE);
+            } else {
+                updatePlaybackLocation(PlaybackLocation.LOCAL);
+            }
         }
         super.onResume();
 
@@ -549,6 +557,7 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
 
     @Override
     public void onEvent(MediaPlayer.Event event) {
+        Log.e("Ahmed", "aa: " + event.type);
         switch (event.type) {
             case MediaPlayer.Event.MediaChanged:
                 viewModel.setScreenStateEvent(new ScreenEvent(ScreenStateEvent.MEDIA_CHANGED));
@@ -569,13 +578,14 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
                 viewModel.setScreenStateEvent(new ScreenEvent(ScreenStateEvent.PAUSES));
                 break;
             case MediaPlayer.Event.Stopped:
+                Log.e("Ahmed", "aa: " + event.type);
                 mPlaybackState = PlaybackState.IDLE;
                 long i = (mMediaPlayer.getLength() != mMediaPlayer.getTime()) ?
                         mMediaPlayer.getTime() : 0;
                 videoItem.setPlayerTime((int) i);
                 pausedIn((int) i, selected);
                 viewModel.setScreenStateEvent(new ScreenEvent(ScreenStateEvent.STOPPED));
-                if (videoItems.size() > 0) {
+                if (videoItems.size() > 1 && mMediaPlayer.getLength()>0) {
                     next();
                 }
                 break;
@@ -585,6 +595,11 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
                 break;
             case MediaPlayer.Event.TimeChanged:
                 viewModel.setScreenStateEvent(new ScreenEvent(event.getTimeChanged(), ScreenStateEvent.TIME_CHANGED));
+                break;
+            case MediaPlayer.Event.EncounteredError:
+                viewModel.setScreenStateEvent(new ScreenEvent(100));
+                Toast.makeText(VlcPlayerActivity.this, "Playback error", Toast.LENGTH_LONG).show();
+                finish();
                 break;
         }
     }
@@ -630,11 +645,11 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
     }
 
     private void next() {
-        if (videoItems.size() > selected) {
+        if (videoItems.size() > (selected - 1)) {
             long i = (mMediaPlayer.getLength() != mMediaPlayer.getTime()) ?
                     mMediaPlayer.getTime() : 0;
-            pausedIn((int)i, selected);
-            videoItems.get(selected).setPlayerTime((int)i);
+            pausedIn((int) i, selected);
+            videoItems.get(selected).setPlayerTime((int) i);
 
             selected++;
             videoItem = videoItems.get(selected);
@@ -651,8 +666,8 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
         if (selected > 0) {
             long i = (mMediaPlayer.getLength() != mMediaPlayer.getTime()) ?
                     mMediaPlayer.getTime() : 0;
-            pausedIn((int)i, selected);
-            videoItems.get(selected).setPlayerTime((int)i);
+            pausedIn((int) i, selected);
+            videoItems.get(selected).setPlayerTime((int) i);
 
             selected--;
             videoItem = videoItems.get(selected);
@@ -855,8 +870,11 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
 
         mConnectionClassManager.remove(this);
         super.onPause();
-        mCastContext.getSessionManager().removeSessionManagerListener(
-                mSessionManagerListener, CastSession.class);
+
+        if (isEnableCast) {
+            mCastContext.getSessionManager().removeSessionManagerListener(
+                    mSessionManagerListener, CastSession.class);
+        }
     }
 
     private void loadRemoteMedia(int position, boolean autoPlay) {
@@ -899,5 +917,9 @@ public abstract class VlcPlayerActivity extends AppCompatActivity implements
 //                .setStreamDuration(mSelectedMedia.getDuration() * 1000)
                 .build();
 
+    }
+
+    public void setEnableCast(Boolean enableCast) {
+        isEnableCast = enableCast;
     }
 }
